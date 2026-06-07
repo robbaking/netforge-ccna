@@ -3,8 +3,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: "⊞" },
-  { label: "Quiz", href: "/quiz", icon: "▤" },
+  { label: "Dashboard",  href: "/dashboard",  icon: "⊞" },
+  { label: "Topologier", href: "/topologier", icon: "◈" },
+  { label: "Quiz",       href: "/quiz",       icon: "▤" },
   { label: "Subnetting", href: "/subnetting", icon: "⊟" },
 ];
 
