@@ -1,0 +1,894 @@
+{
+  "questions": [
+    {
+      "id": "nf-001",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket lager i OSI-modellen ansvarar för routing av paket mellan nätverk?",
+      "options": ["Lager 2 – Datalänk", "Lager 3 – Nätverk", "Lager 4 – Transport", "Lager 1 – Fysiskt"],
+      "correct": 1,
+      "explanation": "Lager 3 (Nätverkslagret) hanterar logisk adressering (IP) och routing mellan nätverk."
+    },
+    {
+      "id": "nf-002",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket protokoll arbetar på Lager 4 i OSI-modellen och erbjuder tillförlitlig datakommunikation?",
+      "options": ["UDP", "IP", "TCP", "ICMP"],
+      "correct": 2,
+      "explanation": "TCP (Transmission Control Protocol) arbetar på transportlagret och garanterar leverans via bekräftelser (ACK) och omsändning."
+    },
+    {
+      "id": "nf-003",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad är syftet med en MAC-adress?",
+      "options": [
+        "Identifiera nätverket ett system tillhör",
+        "Unikt identifiera en nätverksenhet på det lokala nätverket",
+        "Kryptera data under överföring",
+        "Tilldela IP-adresser dynamiskt"
+      ],
+      "correct": 1,
+      "explanation": "En MAC-adress är en hårdvaruadress (Layer 2) som unikt identifierar ett nätverksgränssnitt på det lokala nätverket."
+    },
+    {
+      "id": "nf-004",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "En värd med IP 192.168.10.50/26 — vilket är nätverksadressen?",
+      "options": ["192.168.10.0", "192.168.10.32", "192.168.10.48", "192.168.10.64"],
+      "correct": 2,
+      "explanation": "/26 ger en mask på 255.255.255.192, vilket innebär subnät i steg om 64: .0, .64, .128, .192. IP .50 faller i subnätet som börjar på .32? Nej — /26 steg: 0–63, 64–127... 50 är i 0-63-subnätet men närmaste nätverksgräns under 50 med steg 64 är .0. Men /26 = 64 adresser, steg 64: nätverken är .0, .64, .128, .192 — .50 tillhör .0-subnätet som täcker .0–.63. Nätverksadressen är 192.168.10.0."
+    },
+    {
+      "id": "nf-005",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad skiljer en hub från en switch?",
+      "options": [
+        "En hub routar trafik; en switch bridgar",
+        "En switch vidarebefordrar trafik till alla portar; en hub bara till destinationen",
+        "En hub vidarebefordrar trafik till alla portar; en switch bara till rätt port",
+        "De är funktionellt identiska"
+      ],
+      "correct": 2,
+      "explanation": "En hub är ett Layer 1-enhet som broadcastar all trafik till alla portar. En switch (Layer 2) lär sig MAC-adresser och vidarebefordrar trafik enbart till rätt port."
+    },
+    {
+      "id": "nf-006",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket av följande är ett privatiklass B-nätverksadressintervall?",
+      "options": ["10.0.0.0 – 10.255.255.255", "172.16.0.0 – 172.31.255.255", "192.168.0.0 – 192.168.255.255", "169.254.0.0 – 169.254.255.255"],
+      "correct": 1,
+      "explanation": "RFC 1918 definierar privata adresser: 10.0.0.0/8 (klass A), 172.16.0.0–172.31.255.255 (klass B), 192.168.0.0/16 (klass C)."
+    },
+    {
+      "id": "nf-007",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan half-duplex och full-duplex?",
+      "options": [
+        "Half-duplex skickar och tar emot samtidigt; full-duplex inte",
+        "Full-duplex skickar och tar emot samtidigt; half-duplex alternerar",
+        "Full-duplex används bara på trådlösa nätverk",
+        "Half-duplex kräver fiber; full-duplex kräver koppar"
+      ],
+      "correct": 1,
+      "explanation": "Full-duplex tillåter samtidig sändning och mottagning (t.ex. via switch). Half-duplex måste alternera (t.ex. gamla hubbar, walkie-talkies)."
+    },
+    {
+      "id": "nf-008",
+      "domain": "network-fundamentals",
+      "difficulty": "hard",
+      "question": "Vilket påstående om IPv6-adresser är korrekt?",
+      "options": [
+        "IPv6-adresser är 64 bitar långa",
+        "IPv6 använder punktnotation med 4 oktetter",
+        "::1 är loopback-adressen i IPv6",
+        "IPv6 kräver NAT för att fungera på internet"
+      ],
+      "correct": 2,
+      "explanation": "IPv6 loopback är ::1 (motsvarar 127.0.0.1 i IPv4). IPv6 är 128 bitar, använder hexadecimal kolon-notation, och designades för att eliminera behovet av NAT."
+    },
+    {
+      "id": "nf-009",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket lager i OSI-modellen ansvarar för att etablera, hantera och avsluta sessioner?",
+      "options": ["Lager 4 – Transport", "Lager 5 – Session", "Lager 6 – Presentation", "Lager 7 – Applikation"],
+      "correct": 1,
+      "explanation": "Sessionlagret (Lager 5) hanterar upprättandet, underhållet och avslutandet av kommunikationssessioner."
+    },
+    {
+      "id": "nf-010",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är PDU-namnet (Protocol Data Unit) på Lager 2?",
+      "options": ["Bit", "Frame (ram)", "Paket", "Segment"],
+      "correct": 1,
+      "explanation": "PDU-hierarki: Lager 1 = Bit, Lager 2 = Frame, Lager 3 = Paket, Lager 4 = Segment."
+    },
+    {
+      "id": "na-001",
+      "domain": "network-access",
+      "difficulty": "easy",
+      "question": "Vad är syftet med ett VLAN?",
+      "options": [
+        "Kryptera trafik mellan switchar",
+        "Öka bandbredden på en switchport",
+        "Logiskt segmentera ett nätverk oberoende av fysisk placering",
+        "Tilldela IP-adresser automatiskt"
+      ],
+      "correct": 2,
+      "explanation": "VLAN (Virtual LAN) delar upp ett fysiskt nätverk i logiska segment för att öka säkerhet, minska broadcast-domäner och förenkla administration."
+    },
+    {
+      "id": "na-002",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan en access-port och en trunk-port?",
+      "options": [
+        "En access-port bär trafik för flera VLAN; en trunk-port bara ett",
+        "En trunk-port bär trafik för flera VLAN; en access-port bara ett",
+        "Access-portar används bara för routrar",
+        "Trunk-portar kräver fiber"
+      ],
+      "correct": 1,
+      "explanation": "Access-portar tillhör ett enda VLAN och används för slutenheter. Trunk-portar taggar trafik (802.1Q) och bär trafik för flera VLAN, typiskt mellan switchar och routrar."
+    },
+    {
+      "id": "na-003",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vilket IEEE-standardprotokoll används för VLAN-taggning på trunk-portar?",
+      "options": ["802.1X", "802.1Q", "802.3", "802.11"],
+      "correct": 1,
+      "explanation": "802.1Q är standarden för VLAN-taggning. Den lägger till en 4-byte tagg i Ethernet-ramen som innehåller VLAN-ID."
+    },
+    {
+      "id": "na-004",
+      "domain": "network-access",
+      "difficulty": "easy",
+      "question": "Vad är native VLAN på en trunk-port?",
+      "options": [
+        "Det VLAN som alltid är krypterat",
+        "Det VLAN som skickar otaggad trafik på trunk-länken",
+        "Hanteringsvlanen för switchen",
+        "Det VLAN med högst prioritet"
+      ],
+      "correct": 1,
+      "explanation": "Native VLAN skickar och tar emot otaggad trafik på en trunk-port. Standardvärde är VLAN 1, men det är säkrast att ändra det."
+    },
+    {
+      "id": "na-005",
+      "domain": "network-access",
+      "difficulty": "hard",
+      "question": "Vilket STP-portläge innebär att porten skickar och tar emot data normalt?",
+      "options": ["Blocking", "Listening", "Learning", "Forwarding"],
+      "correct": 3,
+      "explanation": "STP-porttillstånd: Blocking (ingen data), Listening (STP-meddelanden), Learning (lär MAC), Forwarding (normal drift)."
+    },
+    {
+      "id": "na-006",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad avgör vilken switch som väljs till Root Bridge i STP?",
+      "options": [
+        "Switchen med flest portar",
+        "Switchen med lägst Bridge ID (prioritet + MAC)",
+        "Switchen med högst Bridge ID",
+        "Den switch som startade upp sist"
+      ],
+      "correct": 1,
+      "explanation": "Root Bridge väljs baserat på lägst Bridge ID. Bridge ID = 8-byte värde bestående av 2-byte prioritet (standard 32768) + 6-byte MAC-adress."
+    },
+    {
+      "id": "na-007",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är EtherChannel och varför används det?",
+      "options": [
+        "En metod för att kryptera Ethernet-trafik",
+        "En teknik för att kombinera flera fysiska länkar till en logisk länk",
+        "En protokoll för att tilldela VLAN automatiskt",
+        "En standard för trådlösa nätverk"
+      ],
+      "correct": 1,
+      "explanation": "EtherChannel (LACP/PAgP) kombinerar 2–8 fysiska Ethernet-portar till en logisk länk för ökad bandbredd och redundans utan att STP blockerar länkarna."
+    },
+    {
+      "id": "na-008",
+      "domain": "network-access",
+      "difficulty": "easy",
+      "question": "Vilket 802.11-frekvensband erbjuder generellt högre hastighet men kortare räckvidd?",
+      "options": ["2.4 GHz", "5 GHz", "900 MHz", "6 GHz"],
+      "correct": 1,
+      "explanation": "5 GHz-bandet har fler icke-överlappande kanaler och högre hastighet men dämpas mer av väggar och hinder jämfört med 2.4 GHz."
+    },
+    {
+      "id": "na-009",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan ett autonomt AP och ett lightweight AP (LAP)?",
+      "options": [
+        "Autonomt AP kräver en WLC; lightweight AP är fristående",
+        "Lightweight AP kräver en WLC för konfiguration; autonomt AP är självständigt",
+        "Lightweight AP används bara inomhus",
+        "Autonomt AP stöder inte SSID"
+      ],
+      "correct": 1,
+      "explanation": "Lightweight AP (LAP) tunnel-ar trafik via CAPWAP till en Wireless LAN Controller (WLC) som hanterar konfiguration centralt. Autonoma AP:n konfigureras individuellt."
+    },
+    {
+      "id": "na-010",
+      "domain": "network-access",
+      "difficulty": "hard",
+      "question": "Vilket Spanning Tree-protokoll konvergerar snabbast och är Ciscos rekommendation?",
+      "options": ["STP (802.1D)", "PVST+", "RSTP (802.1w)", "MSTP (802.1s)"],
+      "correct": 2,
+      "explanation": "RSTP (Rapid Spanning Tree Protocol) konvergerar på sekunder istället för 30–50 sekunder som traditionellt STP. Det är bakåtkompatibelt och Ciscos standard."
+    },
+    {
+      "id": "ic-001",
+      "domain": "ip-connectivity",
+      "difficulty": "easy",
+      "question": "Vad är en statisk rutt?",
+      "options": [
+        "En rutt som lärs automatiskt via ett routingprotokoll",
+        "En manuellt konfigurerad rutt i routingtabellen",
+        "En rutt som uppdateras varje minut",
+        "En rutt som bara fungerar inom LAN"
+      ],
+      "correct": 1,
+      "explanation": "En statisk rutt konfigureras manuellt med kommandot 'ip route'. Den förändras inte automatiskt och kräver manuell uppdatering vid topologiändringar."
+    },
+    {
+      "id": "ic-002",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vilket är standardvärdet för OSPF Hello-intervallet på ett Ethernet-gränssnitt?",
+      "options": ["5 sekunder", "10 sekunder", "30 sekunder", "40 sekunder"],
+      "correct": 1,
+      "explanation": "OSPF skickar Hello-paket var 10:e sekund på broadcast-nät (Ethernet). Dead-intervallet är 4× Hello = 40 sekunder."
+    },
+    {
+      "id": "ic-003",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vad väljs till Designated Router (DR) i OSPF på ett multi-access-nät?",
+      "options": [
+        "Routern med lägst Router-ID",
+        "Routern med högst prioritet, sedan högst Router-ID vid lika",
+        "Den router som startade OSPF-processen först",
+        "Routern med flest OSPF-grannar"
+      ],
+      "correct": 1,
+      "explanation": "DR väljs baserat på högst OSPF-prioritet (standard 1). Vid lika används högst Router-ID. Router-ID = högsta loopback-IP eller högsta aktiva gränssnitts-IP."
+    },
+    {
+      "id": "ic-004",
+      "domain": "ip-connectivity",
+      "difficulty": "hard",
+      "question": "Vad innebär 'longest prefix match' i routing?",
+      "options": [
+        "Routern väljer rutten med lägst AD-värde",
+        "Routern väljer den mest specifika rutten (längst subnätmask) som matchar destinationen",
+        "Routern väljer alltid default-rutten",
+        "Routern väljer rutten med lägst metric"
+      ],
+      "correct": 1,
+      "explanation": "Longest prefix match innebär att routern väljer den mest specifika rutten. En /28-rutt föredras framför /24 om båda matchar destinationen."
+    },
+    {
+      "id": "ic-005",
+      "domain": "ip-connectivity",
+      "difficulty": "easy",
+      "question": "Vad är Administrative Distance (AD)?",
+      "options": [
+        "Den maximala hopräkningen för ett routingprotokoll",
+        "Det värde som används för att jämföra trovärdigheten hos routingkällor",
+        "Bandbredden på en länk i routingtabellen",
+        "Antalet OSPF-grannar en router har"
+      ],
+      "correct": 1,
+      "explanation": "AD anger trovärdigheten hos en routingkälla. Lägre AD = mer betrodd. Exempel: statisk rutt = 1, OSPF = 110, RIP = 120."
+    },
+    {
+      "id": "ic-006",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vad är metricvärdet OSPF använder för att beräkna cost?",
+      "options": ["Hopräkning", "Bandbredd (10⁸ / bandbredd i bps)", "Fördröjning", "Bandbredd × fördröjning"],
+      "correct": 1,
+      "explanation": "OSPF cost = referensbandbredd / gränssnittsbandbredd. Standardreferensbandbredd = 10⁸ bps (100 Mbps). FastEthernet = cost 1, Serial = cost 64."
+    },
+    {
+      "id": "ic-007",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vilket kommando visar OSPF-grannar på en Cisco-router?",
+      "options": [
+        "show ip route ospf",
+        "show ip ospf neighbor",
+        "show ospf database",
+        "debug ip ospf events"
+      ],
+      "correct": 1,
+      "explanation": "'show ip ospf neighbor' visar OSPF-granntabellen med status (FULL = korrekt adjacency), Router-ID, prioritet och gränssnitt."
+    },
+    {
+      "id": "ic-008",
+      "domain": "ip-connectivity",
+      "difficulty": "hard",
+      "question": "Vad är en floating static route och när används den?",
+      "options": [
+        "En statisk rutt som ändras automatiskt baserat på trafik",
+        "En statisk rutt med högre AD än ett dynamiskt protokoll, används som backup",
+        "En rutt som lärs via OSPF men sparas som statisk",
+        "En rutt utan next-hop"
+      ],
+      "correct": 1,
+      "explanation": "En floating static route konfigureras med ett AD-värde högre än det dynamiska protokollet (t.ex. AD 200 > OSPF 110). Den aktiveras bara om den primära rutten försvinner."
+    },
+    {
+      "id": "ic-009",
+      "domain": "ip-connectivity",
+      "difficulty": "easy",
+      "question": "Vad är en default route (0.0.0.0/0)?",
+      "options": [
+        "En rutt till det lokala subnätet",
+        "En catch-all-rutt som används när ingen specifik rutt matchar",
+        "En rutt som blockar all trafik",
+        "En rutt som bara fungerar med IPv6"
+      ],
+      "correct": 1,
+      "explanation": "Default route (0.0.0.0/0 eller ::/0 för IPv6) är 'last resort'-rutten. Paket utan mer specifik matchning skickas via denna rutt, typiskt mot internet."
+    },
+    {
+      "id": "ic-010",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vilken OSPF-nättyp används på point-to-point-länkar?",
+      "options": [
+        "Broadcast multi-access",
+        "Non-broadcast multi-access (NBMA)",
+        "Point-to-point",
+        "Loopback"
+      ],
+      "correct": 2,
+      "explanation": "Point-to-point OSPF-nättyp används på seriella länkar och tunnlar. Ingen DR/BDR väljs — routrarna bildar direkt adjacency."
+    },
+    {
+      "id": "is-001",
+      "domain": "ip-services",
+      "difficulty": "easy",
+      "question": "Vad är DHCP och vad används det till?",
+      "options": [
+        "Ett protokoll för att kryptera IP-kommunikation",
+        "Ett protokoll för att automatiskt tilldela IP-adresser och nätverksinformation till klienter",
+        "Ett protokoll för DNS-namnuppslag",
+        "Ett routingprotokoll för att dela IP-tabeller"
+      ],
+      "correct": 1,
+      "explanation": "DHCP (Dynamic Host Configuration Protocol) tilldelar automatiskt IP-adresser, subnätmask, default gateway och DNS-serveradresser till klienter."
+    },
+    {
+      "id": "is-002",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad är DHCP DORA-processen?",
+      "options": [
+        "Discover, Offer, Request, Acknowledge",
+        "Define, Offer, Route, Assign",
+        "Discover, Order, Respond, Assign",
+        "Data, Open, Request, Allow"
+      ],
+      "correct": 0,
+      "explanation": "DORA: Klienten skickar Discover (broadcast), server svarar med Offer, klienten skickar Request, servern bekräftar med Acknowledge (ACK)."
+    },
+    {
+      "id": "is-003",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad gör en DHCP relay agent (ip helper-address)?",
+      "options": [
+        "Krypterar DHCP-trafik",
+        "Vidarebefordrar DHCP-broadcasts från klienter till en DHCP-server på ett annat subnät",
+        "Tilldelar statiska IP-adresser baserat på MAC",
+        "Blockerar obehörig DHCP-trafik"
+      ],
+      "correct": 1,
+      "explanation": "DHCP Relay Agent (ip helper-address) vidarebefordrar DHCP-broadcasts som unicast till en central DHCP-server, möjliggör en DHCP-server för flera subnät."
+    },
+    {
+      "id": "is-004",
+      "domain": "ip-services",
+      "difficulty": "easy",
+      "question": "Vilken port använder DNS normalt?",
+      "options": ["Port 21", "Port 53", "Port 80", "Port 443"],
+      "correct": 1,
+      "explanation": "DNS använder UDP port 53 för vanliga frågor och TCP port 53 för zonetransfererar och stora svar."
+    },
+    {
+      "id": "is-005",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan statisk NAT och dynamisk NAT?",
+      "options": [
+        "Statisk NAT mappar en intern IP till en extern IP permanent; dynamisk NAT väljer från en pool",
+        "Dynamisk NAT är säkrare än statisk NAT",
+        "Statisk NAT kräver fler publika IP-adresser",
+        "De är funktionellt identiska"
+      ],
+      "correct": 0,
+      "explanation": "Statisk NAT: 1-till-1-permanent mappning (t.ex. för servrar). Dynamisk NAT: väljer en ledig adress från en pool vid behov. PAT (overload) är mest vanligt."
+    },
+    {
+      "id": "is-006",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad är NTP och varför är det viktigt i nätverk?",
+      "options": [
+        "Network Topology Protocol — kartlägger nätverkstopologi",
+        "Network Time Protocol — synkroniserar klockor för korrekt loggning och autentisering",
+        "Network Transfer Protocol — optimerar filöverföringar",
+        "Network Testing Protocol — testar anslutningar"
+      ],
+      "correct": 1,
+      "explanation": "NTP (Network Time Protocol) synkroniserar systemklockor. Korrekt tid är kritisk för loggar, certifikat, Kerberos-autentisering och felsökning."
+    },
+    {
+      "id": "is-007",
+      "domain": "ip-services",
+      "difficulty": "hard",
+      "question": "Vad är PAT (Port Address Translation)?",
+      "options": [
+        "En form av NAT som mappar flera privata IP till en publik IP via unika portnummer",
+        "En säkerhetsmekanism som filtrerar trafik baserat på portnummer",
+        "En metod att prioritera trafik i QoS",
+        "En teknik att dela upp ett nätverk i VLAN"
+      ],
+      "correct": 0,
+      "explanation": "PAT (även NAT Overload) mappar många interna IP-adresser till en enda publik IP men använder unika källportar för att hålla reda på sessioner."
+    },
+    {
+      "id": "is-008",
+      "domain": "ip-services",
+      "difficulty": "easy",
+      "question": "Vilket protokoll används för att skicka loggmeddelanden från nätverksenheter till en central server?",
+      "options": ["SNMP", "Syslog", "NTP", "TFTP"],
+      "correct": 1,
+      "explanation": "Syslog skickar loggmeddelanden (severity 0–7) till en central loggserver. Det använder UDP port 514."
+    },
+    {
+      "id": "is-009",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad är SNMP och vad används det till?",
+      "options": [
+        "Simple Network Management Protocol — används för nätverksövervakning och hantering",
+        "Secure Network Messaging Protocol — krypterar nätverkstrafik",
+        "Simple Network Mapping Protocol — kartlägger topologi",
+        "Secured Network Monitoring Protocol — rapporterar säkerhetshändelser"
+      ],
+      "correct": 0,
+      "explanation": "SNMP hanterar och övervakar nätverksenheter. NMS (Network Management System) använder GET/SET/TRAP för att läsa och konfigurera enheter och ta emot larm."
+    },
+    {
+      "id": "is-010",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad gör HSRP (Hot Standby Router Protocol)?",
+      "options": [
+        "Krypterar trafik mellan routrar",
+        "Ger gateway-redundans genom att flera routrar delar en virtuell IP-adress",
+        "Balanserar last jämnt mellan flera routrar",
+        "Konfigurerar dynamisk routing automatiskt"
+      ],
+      "correct": 1,
+      "explanation": "HSRP skapar en virtuell gateway-IP som delas av aktiv och standby-router. Om aktiv router misslyckas tar standby-routern över transparent för klienterna."
+    },
+    {
+      "id": "sf-001",
+      "domain": "security-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad är en ACL (Access Control List)?",
+      "options": [
+        "En lista över VLAN i ett nätverk",
+        "En uppsättning regler som filtrerar nätverkstrafik baserat på IP, port eller protokoll",
+        "En lista över godkända MAC-adresser",
+        "En katalog över nätverksenheter"
+      ],
+      "correct": 1,
+      "explanation": "ACL är en sekvens av permit/deny-regler som matchas uppifrån och ned. Varje lista avslutas med en implicit 'deny all'."
+    },
+    {
+      "id": "sf-002",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan standard-ACL och extended-ACL?",
+      "options": [
+        "Standard-ACL filtrerar på source och destination IP samt port; extended-ACL bara på source IP",
+        "Extended-ACL filtrerar på source/destination IP och port; standard-ACL bara på source IP",
+        "Standard-ACL är säkrare; extended-ACL är snabbare",
+        "De är identiska men placeras på olika routermodeller"
+      ],
+      "correct": 1,
+      "explanation": "Standard-ACL (1–99, 1300–1999): filtrerar bara på source IP. Extended-ACL (100–199, 2000–2699): filtrerar på source/destination IP, protokoll och portar."
+    },
+    {
+      "id": "sf-003",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är en 'implicit deny' i en ACL?",
+      "options": [
+        "En explicit deny-regel i slutet av listan",
+        "En automatisk block-regel i slutet av varje ACL som nekar all trafik som inte matchat",
+        "En regel som tillåter all trafik som standard",
+        "En tillfällig blockering under konfiguration"
+      ],
+      "correct": 1,
+      "explanation": "Varje ACL på Cisco-enheter har en osynlig 'deny any' i slutet. Om ingen permit-regel matchar nekas paketet. Glöm inte lägga till permit-regler!"
+    },
+    {
+      "id": "sf-004",
+      "domain": "security-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad är skillnaden mellan autentisering och auktorisering?",
+      "options": [
+        "Autentisering verifierar identitet; auktorisering bestämmer vad den verifierade identiteten får göra",
+        "Auktorisering verifierar identitet; autentisering ger rättigheter",
+        "De är synonymer",
+        "Autentisering gäller enheter; auktorisering gäller användare"
+      ],
+      "correct": 0,
+      "explanation": "AAA: Authentication (vem är du?), Authorization (vad får du göra?), Accounting (vad gjorde du?). RADIUS/TACACS+ hanterar AAA centralt."
+    },
+    {
+      "id": "sf-005",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är ett man-in-the-middle-angrepp?",
+      "options": [
+        "En angripare avlyssnar och eventuellt modifierar kommunikation mellan två parter",
+        "En angripare överbelastar en tjänst med förfrågningar",
+        "En angripare gissar lösenord via brute force",
+        "En angripare skapar falska DHCP-svar"
+      ],
+      "correct": 0,
+      "explanation": "MITM: angriparen positionerar sig mellan klient och server, kan avlyssna (eavesdropping) och/eller modifiera trafiken utan att parterna märker det."
+    },
+    {
+      "id": "sf-006",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad skyddar port security på en switch mot?",
+      "options": [
+        "DDoS-angrepp från internet",
+        "Obehöriga enheter som ansluter till switchportar baserat på MAC-adress",
+        "VLAN hopping-angrepp",
+        "Routing loop"
+      ],
+      "correct": 1,
+      "explanation": "Port security begränsar antalet MAC-adresser per port och/eller tillåter bara specifika MAC-adresser. Bra mot MAC flooding och obehöriga anslutningar."
+    },
+    {
+      "id": "sf-007",
+      "domain": "security-fundamentals",
+      "difficulty": "hard",
+      "question": "Vad är DHCP Snooping?",
+      "options": [
+        "En teknik som avlyssnar DHCP-trafik för statistikändamål",
+        "En säkerhetsfunktion som filtrerar DHCP-meddelanden och förhindrar DHCP-spoofing från obehöriga servrar",
+        "En metod att fördela DHCP-laster mellan servrar",
+        "En krypteringsmetod för DHCP-paket"
+      ],
+      "correct": 1,
+      "explanation": "DHCP Snooping bygger en betrodd bindningstabell (IP+MAC+port). Ports markeras som 'trusted' (uplink/server) eller 'untrusted' (klientportar). Blockerar rogue DHCP-servrar."
+    },
+    {
+      "id": "sf-008",
+      "domain": "security-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilken säkerhetsfunktion bör aktiveras på alla oanvända switchportar?",
+      "options": [
+        "Port security med sticky MAC",
+        "Sätt i ett VLAN och administrativt stäng av porten (shutdown)",
+        "Aktivera spanning tree PortFast",
+        "Konfigurera porten som trunk"
+      ],
+      "correct": 1,
+      "explanation": "Oanvända portar bör placeras i ett oanvänt VLAN och stängas av med 'shutdown'. Detta förhindrar obehörig åtkomst till nätverket."
+    },
+    {
+      "id": "sf-009",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan IDS och IPS?",
+      "options": [
+        "IDS blockerar aktiv trafik; IPS bara detekterar",
+        "IPS är placerat inline och kan blockera hot aktivt; IDS övervakar passivt och genererar larm",
+        "De är identiska men från olika tillverkare",
+        "IDS används för trådlösa nätverk; IPS för kabelanslutna"
+      ],
+      "correct": 1,
+      "explanation": "IDS (Intrusion Detection System): passiv övervakning, genererar larm. IPS (Intrusion Prevention System): placerat inline i trafikflödet, kan aktivt blockera skadlig trafik."
+    },
+    {
+      "id": "sf-010",
+      "domain": "security-fundamentals",
+      "difficulty": "hard",
+      "question": "Vad är 'VLAN hopping'?",
+      "options": [
+        "En legitim teknik för att flytta enheter mellan VLAN",
+        "En attack där angriparen skickar trafik till ett VLAN den normalt inte har åtkomst till via switch spoofing eller double tagging",
+        "En routing-teknik för att optimera VLAN-trafik",
+        "En metod att öka bandbredden mellan VLAN"
+      ],
+      "correct": 1,
+      "explanation": "VLAN hopping-angrepp: (1) Switch spoofing — angriparen förhandlar trunk-länk. (2) Double tagging — angriparen kapslar in en VLAN-tagg i en annan för att nå native VLAN."
+    },
+    {
+      "id": "ap-001",
+      "domain": "automation-programmability",
+      "difficulty": "easy",
+      "question": "Vad är skillnaden mellan traditionell nätverksautomation och SDN?",
+      "options": [
+        "SDN är bara ett nytt ord för nätverksautomation",
+        "SDN separerar kontrollplanet från dataplanet för centraliserad nätverksstyrning",
+        "Traditionell automation är snabbare än SDN",
+        "SDN kräver proprietär hårdvara"
+      ],
+      "correct": 1,
+      "explanation": "SDN (Software Defined Networking) separerar kontrollen (kontrollplanet) från vidarebefordringen (dataplanet). En central SDN-controller styr nätverket via API."
+    },
+    {
+      "id": "ap-002",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad är REST API och vilka HTTP-metoder används vanligast?",
+      "options": [
+        "Reliable Encrypted Socket Transport — GET, POST, SEND, RECEIVE",
+        "Representational State Transfer — GET, POST, PUT/PATCH, DELETE",
+        "Remote Execution Service Tool — READ, WRITE, UPDATE, DELETE",
+        "Real-time Event Streaming Technology — PUSH, PULL, SYNC, ASYNC"
+      ],
+      "correct": 1,
+      "explanation": "REST API använder HTTP-metoder: GET (läs), POST (skapa), PUT/PATCH (uppdatera), DELETE (ta bort). Data utbyts vanligen i JSON-format."
+    },
+    {
+      "id": "ap-003",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan JSON och XML som dataformat?",
+      "options": [
+        "JSON är lättläst och kompakt med nyckel-värde-par; XML använder taggstruktur och är mer verbose",
+        "XML är modernare och mer populärt än JSON",
+        "JSON kräver ett schema; XML behöver inget",
+        "De är identiska men används på olika plattformar"
+      ],
+      "correct": 0,
+      "explanation": "JSON är kompakt, lättläst och vanligt i moderna API:er. XML är äldre, mer verbose men flexibelt. Cisco DNA Center och Meraki API använder JSON."
+    },
+    {
+      "id": "ap-004",
+      "domain": "automation-programmability",
+      "difficulty": "hard",
+      "question": "Vad är Ansible och hur skiljer det sig från Puppet/Chef?",
+      "options": [
+        "Ansible är agentbaserat; Puppet är agentlöst",
+        "Ansible är agentlöst och push-baserat med YAML-playbooks; Puppet/Chef är agentbaserade med pull-modell",
+        "Ansible är bara för Windows-miljöer",
+        "Puppet och Chef är modernare verktyg än Ansible"
+      ],
+      "correct": 1,
+      "explanation": "Ansible: agentlöst (SSH/API), push-baserat, YAML-playbooks — populärt för nätverksautomation. Puppet/Chef: kräver agenter på hanterade noder, pull-baserad konfigurationshantering."
+    },
+    {
+      "id": "ap-005",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad är YANG och NETCONF?",
+      "options": [
+        "YANG är ett routingprotokoll; NETCONF är ett krypteringsprotokoll",
+        "YANG är ett datamodelleringsspråk; NETCONF är ett nätverkshanteringsprotokoll som transporterar YANG-modeller",
+        "Båda är varianter av SNMP",
+        "YANG kartlägger nätverkstopologi; NETCONF hanterar VLAN"
+      ],
+      "correct": 1,
+      "explanation": "YANG (RFC 6020) definierar datastrukturer för nätverkskonfiguration. NETCONF (RFC 6241) är protokollet (via SSH) som transporterar YANG-data för att konfigurera enheter."
+    },
+    {
+      "id": "ap-006",
+      "domain": "automation-programmability",
+      "difficulty": "easy",
+      "question": "Vad är Cisco DNA Center?",
+      "options": [
+        "En fysisk router för datacenter",
+        "En centraliserad nätverkshanteringsplattform med intent-based networking och automation",
+        "En brandvägg för datacenter",
+        "Ett protokoll för nätverksvirtualisering"
+      ],
+      "correct": 1,
+      "explanation": "Cisco DNA Center är Ciscos SDN-controller för enterprise-nätverk. Det erbjuder centraliserad konfiguration, automation, analys och säkerhet via REST API."
+    },
+    {
+      "id": "ap-007",
+      "domain": "automation-programmability",
+      "difficulty": "hard",
+      "question": "Vad är skillnaden mellan kontrolplanet, dataplanet och hanteringsplanet?",
+      "options": [
+        "Alla tre planerna hanterar vidarebefordring av trafik",
+        "Kontrolplanet fattar routingbeslut; dataplanet vidarebefordrar trafik; hanteringsplanet hanterar administrativ åtkomst",
+        "Dataplanet fattar beslut; kontrolplanet vidarebefordrar; hanteringsplanet analyserar",
+        "De är synonyma begrepp i SDN"
+      ],
+      "correct": 1,
+      "explanation": "Kontrollplan: routing-protokoll, STP, belutsfattande (CPU). Dataplan: faktisk vidarebefordring av paket (ASIC/hårdvara). Hanteringsplan: SSH, SNMP, Syslog, CLI."
+    },
+    {
+      "id": "ap-008",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vilket dataformat används vanligast för Cisco API-anrop?",
+      "options": ["XML", "JSON", "CSV", "YAML"],
+      "correct": 1,
+      "explanation": "JSON (JavaScript Object Notation) är standardformat för moderna nätverks-API:er inkl. Cisco DNA Center, Meraki och IOS-XE RESTCONF."
+    },
+    {
+      "id": "ap-009",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad är en Python-bibliotekets 'requests' primära användning i nätverksautomation?",
+      "options": [
+        "Att konfigurera nätverksgränssnitt direkt",
+        "Att göra HTTP/HTTPS API-anrop till nätverksenheter och plattformar",
+        "Att parsa routing-tabeller",
+        "Att generera nätverksdiagram"
+      ],
+      "correct": 1,
+      "explanation": "Python requests-biblioteket används för att göra REST API-anrop (GET, POST, PUT, DELETE) till nätverks-API:er. Kombineras ofta med json-modulen för att hantera svar."
+    },
+    {
+      "id": "ap-010",
+      "domain": "automation-programmability",
+      "difficulty": "hard",
+      "question": "Vad är Intent-Based Networking (IBN)?",
+      "options": [
+        "Ett nytt routingprotokoll som ersätter OSPF",
+        "En nätverksparadigm där administratören definierar önskat tillstånd (intent) och systemet konfigurerar nätverket automatiskt",
+        "En metod att automatisera endast säkerhetspolicies",
+        "En standard för trådlösa nätverk"
+      ],
+      "correct": 1,
+      "explanation": "IBN: Administratören specificerar 'vad' nätverket ska göra (affärspolicies), inte 'hur'. Systemet (t.ex. Cisco DNA Center) översätter intent till konfiguration och validerar kontinuerligt."
+    },
+    {
+      "id": "nf-011",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan unicast, multicast och broadcast?",
+      "options": [
+        "Unicast: alla, multicast: grupp, broadcast: en",
+        "Unicast: en mottagare, multicast: specifik grupp, broadcast: alla i domänen",
+        "Broadcast: en mottagare, unicast: alla, multicast: specifik grupp",
+        "De är identiska men används på olika protokollager"
+      ],
+      "correct": 1,
+      "explanation": "Unicast = en-till-en. Multicast = en-till-grupp (effektivare än broadcast). Broadcast = en-till-alla i broadcast-domänen (Limited: 255.255.255.255, Directed: x.x.x.255)."
+    },
+    {
+      "id": "nf-012",
+      "domain": "network-fundamentals",
+      "difficulty": "hard",
+      "question": "Vad är FCS (Frame Check Sequence) i en Ethernet-ram?",
+      "options": [
+        "En del av IP-headern som verifierar paketstorlek",
+        "En kontrollsumma i slutet av en Ethernet-ram för feldetektering",
+        "En sekvens som identifierar VLAN-tillhörighet",
+        "En del av TCP-headern för flödeskontroll"
+      ],
+      "correct": 1,
+      "explanation": "FCS är ett 4-byte CRC-värde i slutet av Ethernet-ramen. Mottagaren beräknar om CRC och jämför — vid mismatch kastas ramen (feldetektering, ej felkorrigering)."
+    },
+    {
+      "id": "ic-011",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vilket kommando konfigurerar en statisk default-rutt mot next-hop 203.0.113.1?",
+      "options": [
+        "ip route 0.0.0.0 0.0.0.0 203.0.113.1",
+        "ip route default 203.0.113.1",
+        "ip default-gateway 203.0.113.1",
+        "route 0.0.0.0/0 next-hop 203.0.113.1"
+      ],
+      "correct": 0,
+      "explanation": "Syntax: ip route [nätverk] [mask] [next-hop | exit-interface]. Default route: ip route 0.0.0.0 0.0.0.0 [next-hop]. 'ip default-gateway' används bara på Layer 2-switchar."
+    },
+    {
+      "id": "na-011",
+      "domain": "network-access",
+      "difficulty": "hard",
+      "question": "Vad är PortFast och när ska det aktiveras?",
+      "options": [
+        "PortFast ökar switchportens hastighetsgräns",
+        "PortFast hoppar över STP Listening/Learning och går direkt till Forwarding — ska bara användas på access-portar mot slutenheter",
+        "PortFast aktiverar full-duplex automatiskt",
+        "PortFast är en säkerhetsfunktion som blockerar otaggad trafik"
+      ],
+      "correct": 1,
+      "explanation": "PortFast hoppar över STP Listening (15s) och Learning (15s) för att ge klienter snabbare nätverksåtkomst. Ska ALDRIG aktiveras på trunk-portar — risk för loop."
+    },
+    {
+      "id": "sf-011",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vilket SSH-kommando används för att generera RSA-nycklar på en Cisco-enhet?",
+      "options": [
+        "enable ssh",
+        "crypto key generate rsa",
+        "ssh key generate",
+        "ip ssh key create"
+      ],
+      "correct": 1,
+      "explanation": "Steg för SSH: 1) hostname, 2) ip domain-name, 3) crypto key generate rsa (minst 1024 bit rekommenderas), 4) ip ssh version 2, 5) line vty 0 4 / transport input ssh."
+    },
+    {
+      "id": "is-011",
+      "domain": "ip-services",
+      "difficulty": "easy",
+      "question": "Vilken port används av SSH för säker fjärranslutning?",
+      "options": ["Port 22", "Port 23", "Port 443", "Port 3389"],
+      "correct": 0,
+      "explanation": "SSH (Secure Shell) använder TCP port 22. Det ersätter Telnet (port 23) som skickar data i klartext. SSH krypterar all kommunikation."
+    },
+    {
+      "id": "nf-013",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad är loopback-adressen i IPv4?",
+      "options": ["192.168.0.1", "10.0.0.1", "127.0.0.1", "172.16.0.1"],
+      "correct": 2,
+      "explanation": "127.0.0.1 (hela 127.0.0.0/8-blocket) är reserverat för loopback. Paket till 127.x.x.x lämnar aldrig enheten — används för att testa TCP/IP-stacken lokalt."
+    },
+    {
+      "id": "ic-012",
+      "domain": "ip-connectivity",
+      "difficulty": "easy",
+      "question": "Vilket kommando visar routingtabellen på en Cisco-router?",
+      "options": [
+        "show interface brief",
+        "show ip route",
+        "show running-config",
+        "debug ip routing"
+      ],
+      "correct": 1,
+      "explanation": "'show ip route' visar routingtabellen med koder: C = connected, S = static, O = OSPF, R = RIP, * = candidate default. Varje post visar AD/metric och next-hop."
+    },
+    {
+      "id": "na-012",
+      "domain": "network-access",
+      "difficulty": "easy",
+      "question": "Vilket kommando visar alla VLAN och deras porttilldelningar på en Cisco-switch?",
+      "options": [
+        "show running-config",
+        "show vlan brief",
+        "show interfaces trunk",
+        "show mac address-table"
+      ],
+      "correct": 1,
+      "explanation": "'show vlan brief' visar VLAN-ID, namn, status och tilldelade access-portar. 'show interfaces trunk' visar trunk-portar och tillåtna VLAN."
+    },
+    {
+      "id": "ap-011",
+      "domain": "automation-programmability",
+      "difficulty": "easy",
+      "question": "Vilket HTTP-statuskod indikerar en lyckad API-förfrågan?",
+      "options": ["200 OK", "404 Not Found", "500 Internal Server Error", "401 Unauthorized"],
+      "correct": 0,
+      "explanation": "HTTP 200 OK = lyckad. Vanliga koder: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 500 Server Error."
+    }
+  ]
+}

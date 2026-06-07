@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env*.local
+*.log
+
+# Old leftover files
+app.py
+progress.json
+ccna_questions.json
+
+# AI assistant config
+CLAUDE.md
