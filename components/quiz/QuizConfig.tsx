@@ -5,6 +5,7 @@ import type { Domain, Difficulty } from "@/lib/types";
 
 interface Props {
   onStart: (domain: Domain | "all", count: number, difficulty: Difficulty | "all") => void;
+  initialDomain?: Domain | "all";
 }
 
 const COUNT_OPTIONS = [10, 25, 50];
@@ -15,8 +16,8 @@ const DIFFICULTY_OPTIONS: { value: Difficulty | "all"; label: string }[] = [
   { value: "hard", label: "Svår" },
 ];
 
-export default function QuizConfig({ onStart }: Props) {
-  const [domain, setDomain] = useState<Domain | "all">("all");
+export default function QuizConfig({ onStart, initialDomain = "all" }: Props) {
+  const [domain, setDomain] = useState<Domain | "all">(initialDomain);
   const [count, setCount] = useState(10);
   const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
 

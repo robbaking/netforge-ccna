@@ -2,6 +2,10 @@ node_modules/
 .next/
 .env*.local
 *.log
+*.tsbuildinfo
+
+# Local reference material (third-party screenshots)
+referase/
 
 # Old leftover files
 app.py

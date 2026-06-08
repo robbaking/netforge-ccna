@@ -38,8 +38,8 @@
       "difficulty": "normal",
       "question": "En värd med IP 192.168.10.50/26 — vilket är nätverksadressen?",
       "options": ["192.168.10.0", "192.168.10.32", "192.168.10.48", "192.168.10.64"],
-      "correct": 2,
-      "explanation": "/26 ger en mask på 255.255.255.192, vilket innebär subnät i steg om 64: .0, .64, .128, .192. IP .50 faller i subnätet som börjar på .32? Nej — /26 steg: 0–63, 64–127... 50 är i 0-63-subnätet men närmaste nätverksgräns under 50 med steg 64 är .0. Men /26 = 64 adresser, steg 64: nätverken är .0, .64, .128, .192 — .50 tillhör .0-subnätet som täcker .0–.63. Nätverksadressen är 192.168.10.0."
+      "correct": 0,
+      "explanation": "/26 ger mask 255.255.255.192 och 64 adresser per subnät. Subnäten är: .0–.63, .64–.127, .128–.191, .192–.255. IP .50 faller i det första subnätet (.0–.63), så nätverksadressen är 192.168.10.0."
     },
     {
       "id": "nf-005",
@@ -603,20 +603,6 @@
       "explanation": "Oanvända portar bör placeras i ett oanvänt VLAN och stängas av med 'shutdown'. Detta förhindrar obehörig åtkomst till nätverket."
     },
     {
-      "id": "sf-009",
-      "domain": "security-fundamentals",
-      "difficulty": "normal",
-      "question": "Vad är skillnaden mellan IDS och IPS?",
-      "options": [
-        "IDS blockerar aktiv trafik; IPS bara detekterar",
-        "IPS är placerat inline och kan blockera hot aktivt; IDS övervakar passivt och genererar larm",
-        "De är identiska men från olika tillverkare",
-        "IDS används för trådlösa nätverk; IPS för kabelanslutna"
-      ],
-      "correct": 1,
-      "explanation": "IDS (Intrusion Detection System): passiv övervakning, genererar larm. IPS (Intrusion Prevention System): placerat inline i trafikflödet, kan aktivt blockera skadlig trafik."
-    },
-    {
       "id": "sf-010",
       "domain": "security-fundamentals",
       "difficulty": "hard",
@@ -685,20 +671,6 @@
       ],
       "correct": 1,
       "explanation": "Ansible: agentlöst (SSH/API), push-baserat, YAML-playbooks — populärt för nätverksautomation. Puppet/Chef: kräver agenter på hanterade noder, pull-baserad konfigurationshantering."
-    },
-    {
-      "id": "ap-005",
-      "domain": "automation-programmability",
-      "difficulty": "normal",
-      "question": "Vad är YANG och NETCONF?",
-      "options": [
-        "YANG är ett routingprotokoll; NETCONF är ett krypteringsprotokoll",
-        "YANG är ett datamodelleringsspråk; NETCONF är ett nätverkshanteringsprotokoll som transporterar YANG-modeller",
-        "Båda är varianter av SNMP",
-        "YANG kartlägger nätverkstopologi; NETCONF hanterar VLAN"
-      ],
-      "correct": 1,
-      "explanation": "YANG (RFC 6020) definierar datastrukturer för nätverkskonfiguration. NETCONF (RFC 6241) är protokollet (via SSH) som transporterar YANG-data för att konfigurera enheter."
     },
     {
       "id": "ap-006",
@@ -889,6 +861,151 @@
       "options": ["200 OK", "404 Not Found", "500 Internal Server Error", "401 Unauthorized"],
       "correct": 0,
       "explanation": "HTTP 200 OK = lyckad. Vanliga koder: 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 500 Server Error."
+    },
+    {
+      "id": "nf-014",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket adressintervall tillhör IPv6 link-local-adresser?",
+      "options": ["FC00::/7", "FE80::/10", "FF00::/8", "2001::/32"],
+      "correct": 1,
+      "explanation": "Link-local-adresser börjar alltid med FE80:: (prefix FE80::/10). De tilldelas automatiskt på alla IPv6-gränssnitt och är bara giltiga på det lokala segmentet — de routas inte.",
+      "source": "manual"
+    },
+    {
+      "id": "nf-015",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "En enhet har MAC-adressen 00:1A:2B:3C:4D:5E. Vilket är EUI-64 interface-ID?",
+      "options": [
+        "001A:2BFF:FE3C:4D5E",
+        "021A:2BFF:FE3C:4D5E",
+        "001A:2B3C:4D5E:0000",
+        "FE80:001A:2BFF:3C4D"
+      ],
+      "correct": 1,
+      "explanation": "EUI-64: dela MAC i hälften, sätt in FF:FE i mitten → 00:1A:2B:FF:FE:3C:4D:5E. Invertera sedan bit 7 (universal/local-biten) i det första oktetet: 00 → 02. Resultat: 021A:2BFF:FE3C:4D5E.",
+      "source": "manual"
+    },
+    {
+      "id": "na-013",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vilka två LACP-läges-kombinationer bildar en aktiv EtherChannel?",
+      "options": [
+        "Passive – Passive",
+        "Active – Passive och Active – Active",
+        "Desirable – Auto",
+        "On – Active"
+      ],
+      "correct": 1,
+      "explanation": "LACP: Active initierar förhandling, Passive svarar men initierar inte. Active–Active och Active–Passive bildar EtherChannel. Passive–Passive fungerar inte — ingen initierar. 'On' är manuellt läge utan förhandling.",
+      "source": "manual"
+    },
+    {
+      "id": "na-014",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad händer när BPDU Guard triggas på en switchport?",
+      "options": [
+        "Porten går in i Blocking-tillstånd och fortsätter övervaka",
+        "Porten stängs av (err-disabled) omedelbart",
+        "Switchen väljer om root bridge",
+        "VLAN-taggning inaktiveras på porten"
+      ],
+      "correct": 1,
+      "explanation": "BPDU Guard placerar porten i err-disabled-tillstånd när en BPDU tas emot. Detta skyddar mot att switchar ansluts till access-portar konfigurerade med PortFast. Porten måste manuellt återaktiveras (shutdown/no shutdown).",
+      "source": "manual"
+    },
+    {
+      "id": "ic-013",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "I vilken ordning väljer OSPF Router ID?",
+      "options": [
+        "Lägsta aktiva gränssnitts-IP → högsta loopback-IP → manuellt konfigurerat",
+        "Manuellt konfigurerat router-id → högsta loopback-IP → högsta aktiva gränssnitts-IP",
+        "Högsta aktiva gränssnitts-IP → manuellt konfigurerat → loopback",
+        "Slumpmässigt valt vid start"
+      ],
+      "correct": 1,
+      "explanation": "OSPF Router ID-prioritet: 1) manuellt konfigurerat (router-id x.x.x.x), 2) högsta IP på en loopback-interface, 3) högsta IP på ett aktivt fysiskt gränssnitt. Router ID ändras inte förrän OSPF-processen startas om.",
+      "source": "manual"
+    },
+    {
+      "id": "ic-014",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Hur avgörs vilken router blir HSRP Active?",
+      "options": [
+        "Routern med lägst IP-adress",
+        "Routern med högst HSRP-prioritet (standard 100); vid lika väljs högst IP",
+        "Routern som startade senast",
+        "Routern med flest anslutna gränssnitt"
+      ],
+      "correct": 1,
+      "explanation": "HSRP Active väljs av högst prioritet (standard 100, intervall 0–255). Vid lika prioritet vinner routern med högst IP-adress. Preempt måste aktiveras för att en router med högre prioritet automatiskt ska ta tillbaka Active-rollen.",
+      "source": "manual"
+    },
+    {
+      "id": "is-012",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vilket är det minimala kommandosettet för att aktivera SSH v2 på en Cisco-router?",
+      "options": [
+        "enable ssh / ip ssh version 2 / service ssh",
+        "hostname / ip domain-name / crypto key generate rsa / ip ssh version 2 / transport input ssh",
+        "ip ssh enable / line vty 0 4 / login local",
+        "crypto key generate rsa / ip ssh activate / username admin"
+      ],
+      "correct": 1,
+      "explanation": "SSH kräver: 1) hostname (ej Router), 2) ip domain-name (för nyckelgenerering), 3) crypto key generate rsa modulus 2048, 4) ip ssh version 2, 5) line vty 0 4 + login local + transport input ssh.",
+      "source": "manual"
+    },
+    {
+      "id": "sf-012",
+      "domain": "security-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilka tre faktorer används i multifaktorautentisering (MFA)?",
+      "options": [
+        "Lösenord, PIN och backup-kod",
+        "Något du vet, något du har och något du är",
+        "Användarnamn, lösenord och säkerhetsfråga",
+        "IP-adress, MAC-adress och certifikat"
+      ],
+      "correct": 1,
+      "explanation": "MFA kombinerar minst två av: (1) något du vet (lösenord, PIN), (2) något du har (smartkort, mobilapp, token), (3) något du är (fingeravtryck, ansiktsigenkänning). Kombinationen gör intrång avsevärt svårare.",
+      "source": "manual"
+    },
+    {
+      "id": "sf-013",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Var i Cisco WLC GUI konfigureras ett nytt WPA2-PSK WLAN?",
+      "options": [
+        "Controller > Security > AAA",
+        "WLANs > Create New > Layer 2 Security: WPA+WPA2, PSK",
+        "Wireless > Access Points > Security",
+        "Security > Local Policies > WLAN"
+      ],
+      "correct": 1,
+      "explanation": "I Cisco WLC: WLANs → Create New → fyll i Profile Name och SSID → Layer 2-fliken → Security: WPA+WPA2 → PSK → ange lösenordet. Aktivera WLAN och tillämpa.",
+      "source": "manual"
+    },
+    {
+      "id": "ap-012",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan generativ AI och prediktiv AI i nätverksoperationer?",
+      "options": [
+        "Generativ AI är snabbare; prediktiv AI är säkrare",
+        "Generativ AI skapar nytt innehåll (konfig, kod, text); prediktiv AI analyserar historisk data för att förutse framtida tillstånd (t.ex. fel)",
+        "Prediktiv AI är nyare teknologi än generativ AI",
+        "Generativ AI används bara för säkerhet; prediktiv AI för routing"
+      ],
+      "correct": 1,
+      "explanation": "Generativ AI (t.ex. LLM-modeller) skapar konfigurationer, förklaringar och kod. Prediktiv AI analyserar nätverksdata (logs, metrics) för att förutsäga problem, kapacitetsbehov och avvikelser. Cisco använder båda i DNA Center och Meraki.",
+      "source": "manual"
     }
   ]
 }

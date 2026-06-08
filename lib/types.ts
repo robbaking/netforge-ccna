@@ -25,6 +25,7 @@ export interface Question {
   options: string[];
   correct: number;
   explanation: string;
+  source?: "notebooklm" | "cisco-pdf" | "manual";
 }
 
 export interface DomainProgress {

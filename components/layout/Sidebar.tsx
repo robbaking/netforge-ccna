@@ -4,9 +4,11 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { label: "Dashboard",  href: "/dashboard",  icon: "⊞" },
+  { label: "Studieväg",  href: "/studyvag",   icon: "✦" },
   { label: "Topologier", href: "/topologier", icon: "◈" },
   { label: "Quiz",       href: "/quiz",       icon: "▤" },
   { label: "Subnetting", href: "/subnetting", icon: "⊟" },
+  { label: "Resurser",   href: "/resurser",   icon: "▶" },
 ];
 
 export default function Sidebar() {

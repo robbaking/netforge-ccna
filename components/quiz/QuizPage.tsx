@@ -1,10 +1,12 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import QuizConfig from "./QuizConfig";
 import QuizCard from "./QuizCard";
 import QuizResults from "./QuizResults";
 import { getQuestions } from "@/lib/questions";
 import { recordQuizResult } from "@/lib/progress";
+import { DOMAINS } from "@/lib/types";
 import type { Question, Domain, Difficulty } from "@/lib/types";
 
 type Phase = "config" | "quiz" | "results";
@@ -16,7 +18,14 @@ interface QuizState {
   startTime: number;
 }
 
-export default function QuizPage() {
+function QuizPageInner() {
+  const params = useSearchParams();
+  const domainParam = params.get("domain");
+  const initialDomain: Domain | "all" =
+    domainParam && DOMAINS.some((d) => d.id === domainParam)
+      ? (domainParam as Domain)
+      : "all";
+
   const [phase, setPhase] = useState<Phase>("config");
   const [quiz, setQuiz] = useState<QuizState | null>(null);
 
@@ -58,7 +67,7 @@ export default function QuizPage() {
           <span style={{ width: 1, height: 16, background: "var(--border)" }} />
           <span style={{ fontSize: 11, color: "var(--text-dim)" }}>CCNA 200-301</span>
         </header>
-        <QuizConfig onStart={startQuiz} />
+        <QuizConfig onStart={startQuiz} initialDomain={initialDomain} />
       </div>
     );
   }
@@ -108,4 +117,12 @@ export default function QuizPage() {
   }
 
   return null;
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense fallback={null}>
+      <QuizPageInner />
+    </Suspense>
+  );
 }
