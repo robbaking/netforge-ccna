@@ -77,3 +77,12 @@ export function recommendedPhase(progress: AppProgress): StudyPhase {
   }
   return STUDY_PHASES[STUDY_PHASES.length - 1];
 }
+
+// Fas 1 alltid öppen. Fas N öppen om föregående fas ≥ 70%.
+export function isPhaseUnlocked(phase: StudyPhase, progress: AppProgress): boolean {
+  const idx = STUDY_PHASES.findIndex((p) => p.id === phase.id);
+  if (idx <= 0) return true;
+  const prev = STUDY_PHASES[idx - 1];
+  const { answered, pct } = phaseProgress(progress, prev);
+  return answered > 0 && pct >= 70;
+}
