@@ -118,6 +118,14 @@ export default function QuizResults({
               )}
             </div>
           ))}
+          <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+            <Link
+              href="/resurser"
+              style={{ fontSize: 11, color: "var(--cyan)", textDecoration: "none" }}
+            >
+              Se alla läranderesurser →
+            </Link>
+          </div>
         </div>
       )}
 

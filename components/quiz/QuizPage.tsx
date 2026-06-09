@@ -70,8 +70,17 @@ function QuizPageInner() {
       const finalQuiz = { ...quiz, answers: updated };
       setQuiz(finalQuiz);
       const correct = updated.filter((a, i) => a === finalQuiz.questions[i].correct).length;
-      const dom = finalQuiz.questions[0].domain;
-      recordQuizResult(dom, correct, finalQuiz.questions.length);
+
+      // Group by domain so mixed quizzes update each domain's progress correctly
+      const domainResults = new Map<Domain, { correct: number; total: number }>();
+      finalQuiz.questions.forEach((q, i) => {
+        const prev = domainResults.get(q.domain) ?? { correct: 0, total: 0 };
+        domainResults.set(q.domain, {
+          correct: prev.correct + (updated[i] === q.correct ? 1 : 0),
+          total: prev.total + 1,
+        });
+      });
+      domainResults.forEach((stats, dom) => recordQuizResult(dom, stats.correct, stats.total));
 
       const attempt: QuizAttempt = {
         id: crypto.randomUUID(),
