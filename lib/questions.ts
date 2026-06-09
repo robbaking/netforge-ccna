@@ -30,6 +30,11 @@ export function getQuestions(opts?: {
   return qs;
 }
 
+export function getQuestionsByIds(ids: string[]): Question[] {
+  const idSet = new Set(ids);
+  return allQuestions.filter((q) => idSet.has(q.id));
+}
+
 export function countByDomain(): Record<Domain, number> {
   const counts = {} as Record<Domain, number>;
   for (const q of allQuestions) {
