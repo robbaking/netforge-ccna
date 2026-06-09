@@ -822,3 +822,31 @@ export function generateTopology(protocol: Protocol, difficulty: Difficulty): To
     case 'ACLs':  return genACL(difficulty)
   }
 }
+
+export type GeneratorKey =
+  | 'ospf-chain-latt' | 'ospf-chain-medel'
+  | 'ospf-hubspoke-medel' | 'ospf-hubspoke-svar'
+  | 'eigrp-medel'
+  | 'stp-triangle-latt' | 'stp-square-medel' | 'stp-square-svar'
+  | 'vlan-roas-latt' | 'vlan-l3-medel'
+  | 'acl-latt' | 'acl-medel' | 'acl-svar'
+  | 'nat-medel'
+
+export function generateByKey(key: GeneratorKey): Topology {
+  switch (key) {
+    case 'ospf-chain-latt':      return genOSPF_Chain('Lätt')
+    case 'ospf-chain-medel':     return genOSPF_Chain('Medel')
+    case 'ospf-hubspoke-medel':  return genOSPF_HubSpoke('Medel')
+    case 'ospf-hubspoke-svar':   return genOSPF_HubSpoke('Svår')
+    case 'eigrp-medel':          return genEIGRP('Medel')
+    case 'stp-triangle-latt':    return genSTP_Triangle('Lätt')
+    case 'stp-square-medel':     return genSTP_Square('Medel')
+    case 'stp-square-svar':      return genSTP_Square('Svår')
+    case 'vlan-roas-latt':       return genVLAN_RouterOnAStick('Lätt')
+    case 'vlan-l3-medel':        return genVLAN_L3Switch('Medel')
+    case 'acl-latt':             return genACL('Lätt')
+    case 'acl-medel':            return genACL('Medel')
+    case 'acl-svar':             return genACL('Svår')
+    case 'nat-medel':            return genNAT('Medel')
+  }
+}
