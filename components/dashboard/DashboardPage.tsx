@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getProgress, addStudyTime } from "@/lib/progress";
 import { DOMAINS } from "@/lib/types";
 import type { AppProgress } from "@/lib/types";
+import { xpProgress } from "@/lib/xp";
 import ScoreRing from "./ScoreRing";
 import DomainProgress from "./DomainProgress";
 import ActivityFeed from "./ActivityFeed";
@@ -55,6 +56,7 @@ export default function DashboardPage() {
   });
 
   const weakAreas = [...domainData].sort((a, b) => a.pct - b.pct).slice(0, 2).filter(d => d.pct < 70);
+  const xpData = xpProgress(p.xp ?? 0);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: 22 }}>
@@ -106,6 +108,37 @@ export default function DashboardPage() {
               <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text)" }}>{s.value}</div>
             </div>
           ))}
+        </div>
+
+        {/* XP & Nivå */}
+        <div className="nf-card" style={{ marginBottom: 14, padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+                ★ {p.xp ?? 0} XP
+              </span>
+              <span style={{
+                fontSize: 9, padding: "2px 8px", borderRadius: 10,
+                background: "#7c4dff20", border: "1px solid #7c4dff40", color: "var(--purple)",
+                fontWeight: 600, textTransform: "uppercase", letterSpacing: 1,
+              }}>
+                Nivå {xpData.level}
+              </span>
+            </div>
+            <span style={{ fontSize: 10, color: "var(--text-dim)" }}>
+              {xpData.intoLevel} / {xpData.needed} XP till nästa nivå
+            </span>
+          </div>
+          <div style={{ height: 4, borderRadius: 2, background: "var(--bg-elevated)", border: "1px solid var(--border)", overflow: "hidden" }}>
+            <div style={{
+              width: `${xpData.pct}%`,
+              height: "100%",
+              background: "linear-gradient(90deg, var(--purple), var(--cyan))",
+              boxShadow: "0 0 8px #7c4dff40",
+              transition: "width 0.8s ease-out",
+              borderRadius: 2,
+            }} />
+          </div>
         </div>
 
         {/* Score + Domains row */}
