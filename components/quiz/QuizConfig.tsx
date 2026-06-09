@@ -5,6 +5,7 @@ import type { Domain, Difficulty } from "@/lib/types";
 
 interface Props {
   onStart: (domain: Domain | "all", count: number, difficulty: Difficulty | "all") => void;
+  onRepeatWrong: (count: number) => void;
   initialDomain?: Domain | "all";
 }
 
@@ -16,13 +17,14 @@ const DIFFICULTY_OPTIONS: { value: Difficulty | "all"; label: string }[] = [
   { value: "hard", label: "Svår" },
 ];
 
-export default function QuizConfig({ onStart, initialDomain = "all" }: Props) {
+export default function QuizConfig({ onStart, onRepeatWrong, initialDomain = "all" }: Props) {
   const [domain, setDomain] = useState<Domain | "all">(initialDomain);
   const [count, setCount] = useState(10);
   const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
 
   const selectStyle = (active: boolean, accent = "var(--cyan)"): React.CSSProperties => ({
-    padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontSize: 11, fontWeight: active ? 600 : 400,
+    padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontSize: 11,
+    fontWeight: active ? 600 : 400,
     background: active ? `${accent}15` : "var(--bg-elevated)",
     border: `1px solid ${active ? accent : "var(--border)"}`,
     color: active ? accent : "var(--text-dim)",
@@ -71,22 +73,46 @@ export default function QuizConfig({ onStart, initialDomain = "all" }: Props) {
         </div>
       </div>
 
-      <div className="nf-card" style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "linear-gradient(135deg, #00e5ff08, #7c4dff08)",
-        border: "1px solid #00e5ff20",
-      }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Klar att börja?</div>
-          <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4 }}>
-            {count} frågor · {domain === "all" ? "Alla domäner" : DOMAINS.find(d => d.id === domain)?.label} · {
-              difficulty === "all" ? "Alla nivåer" : DIFFICULTY_OPTIONS.find(d => d.value === difficulty)?.label
-            }
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="nf-card" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "linear-gradient(135deg, #00e5ff08, #7c4dff08)",
+          border: "1px solid #00e5ff20",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Klar att börja?</div>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4 }}>
+              {count} frågor · {domain === "all" ? "Alla domäner" : DOMAINS.find((d) => d.id === domain)?.label} ·{" "}
+              {difficulty === "all" ? "Alla nivåer" : DIFFICULTY_OPTIONS.find((d) => d.value === difficulty)?.label}
+            </div>
           </div>
+          <button
+            className="nf-btn-primary"
+            style={{ padding: "10px 28px", fontSize: 12 }}
+            onClick={() => onStart(domain, count, difficulty)}
+          >
+            STARTA QUIZ ▶
+          </button>
         </div>
-        <button className="nf-btn-primary" style={{ padding: "10px 28px", fontSize: 12 }} onClick={() => onStart(domain, count, difficulty)}>
-          STARTA QUIZ ▶
-        </button>
+
+        <div className="nf-card" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "#ff4c6a08", border: "1px solid #ff4c6a20",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Repetera felsvar</div>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4 }}>
+              Bygg ett quiz av dina senaste felsvar
+            </div>
+          </div>
+          <button
+            className="nf-btn-secondary"
+            style={{ padding: "10px 22px", fontSize: 12, borderColor: "#ff4c6a40", color: "var(--red)" }}
+            onClick={() => onRepeatWrong(count)}
+          >
+            REPETERA ↺
+          </button>
+        </div>
       </div>
     </div>
   );
