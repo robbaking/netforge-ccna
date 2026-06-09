@@ -6,12 +6,13 @@ interface Props {
   question: Question;
   selectedAnswer: number | null;
   onAnswer: (idx: number) => void;
+  isLast: boolean;
 }
 
 const KEYS = ["a", "b", "c", "d"];
 const LABELS = ["A", "B", "C", "D"];
 
-export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) {
+export default function QuizCard({ question, selectedAnswer, onAnswer, isLast }: Props) {
   const [revealed, setRevealed] = useState(false);
   const [chosen, setChosen] = useState<number | null>(null);
 
@@ -22,20 +23,30 @@ export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) 
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (revealed) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (chosen !== null) onAnswer(chosen);
+        }
+        return;
+      }
       const idx = KEYS.indexOf(e.key.toLowerCase());
-      if (idx >= 0 && idx < question.options.length && !revealed) {
+      if (idx >= 0 && idx < question.options.length) {
         handlePick(idx);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [question, revealed]);
+  }, [question, revealed, chosen]);
 
   function handlePick(idx: number) {
     if (revealed) return;
     setChosen(idx);
     setRevealed(true);
-    setTimeout(() => onAnswer(idx), 700);
+  }
+
+  function handleNext() {
+    if (chosen !== null) onAnswer(chosen);
   }
 
   function getOptionClass(idx: number): string {
@@ -45,22 +56,27 @@ export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) 
     return "";
   }
 
-  const diffColor = question.difficulty === "easy" ? "var(--green)" : question.difficulty === "hard" ? "var(--red)" : "var(--cyan)";
+  const diffColor =
+    question.difficulty === "easy"
+      ? "var(--green)"
+      : question.difficulty === "hard"
+      ? "var(--red)"
+      : "var(--cyan)";
 
   return (
     <div style={{ maxWidth: 700, margin: "0 auto" }}>
-      {/* Question header */}
       <div className="nf-card" style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <span style={{
-            fontSize: 9, padding: "3px 8px", borderRadius: 4, textTransform: "uppercase", letterSpacing: 1,
+            fontSize: 9, padding: "3px 8px", borderRadius: 4,
+            textTransform: "uppercase", letterSpacing: 1,
             background: `${diffColor}15`, color: diffColor, border: `1px solid ${diffColor}30`,
           }}>{question.difficulty}</span>
           <span style={{ fontSize: 9, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 1 }}>
             {question.domain.replace(/-/g, " ")}
           </span>
           <span style={{ fontSize: 9, color: "var(--muted)", marginLeft: "auto" }}>
-            Tangentbord: A B C D
+            {revealed ? "Enter / Space → nästa" : "Tangentbord: A B C D"}
           </span>
         </div>
         <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, fontWeight: 500 }}>
@@ -68,7 +84,6 @@ export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) 
         </p>
       </div>
 
-      {/* Options */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
         {question.options.map((opt, idx) => (
           <button
@@ -97,7 +112,6 @@ export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) 
         ))}
       </div>
 
-      {/* Explanation */}
       {revealed && (
         <div style={{
           padding: "14px 16px", borderRadius: 8,
@@ -105,11 +119,23 @@ export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) 
           border: `1px solid ${chosen === question.correct ? "#00e67620" : "#ff4c6a20"}`,
           animation: "fadeIn 0.3s ease-out",
         }}>
-          <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 6, color: chosen === question.correct ? "var(--green)" : "var(--red)" }}>
+          <div style={{
+            fontSize: 10, fontWeight: 600, marginBottom: 6,
+            color: chosen === question.correct ? "var(--green)" : "var(--red)",
+          }}>
             {chosen === question.correct ? "✓ Rätt!" : "✗ Fel"} — Förklaring
           </div>
-          <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.7 }}>
+          <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.7, marginBottom: 14 }}>
             {question.explanation}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleNext}
+              className="nf-btn-primary"
+              style={{ fontSize: 11, padding: "8px 20px" }}
+            >
+              {isLast ? "Se resultat →" : "Nästa fråga →"}
+            </button>
           </div>
         </div>
       )}
