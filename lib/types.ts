@@ -48,4 +48,15 @@ export interface AppProgress {
   streak: number;
   lastActiveDate: string;
   studyTimeSeconds: number;
+  xp: number;
+}
+
+export interface QuizAttempt {
+  id: string;
+  date: string;
+  domain: Domain | "all";
+  difficulty: Difficulty | "all";
+  total: number;
+  correct: number;
+  results: { questionId: string; chosen: number | null; correct: boolean }[];
 }
