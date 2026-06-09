@@ -39,7 +39,7 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, []);
 
-  const p = progress ?? { domains: {}, activities: [], streak: 0, lastActiveDate: "", studyTimeSeconds: 0 };
+  const p = progress ?? { domains: {}, activities: [], streak: 0, lastActiveDate: "", studyTimeSeconds: 0, xp: 0 };
 
   const totalQuizzes = Object.values(p.domains).reduce((s, d) => {
     const sessions = d.answered > 0 ? Math.ceil(d.answered / 10) : 0;

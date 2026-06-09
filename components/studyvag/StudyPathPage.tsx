@@ -6,7 +6,7 @@ import { DOMAINS } from "@/lib/types";
 import type { AppProgress } from "@/lib/types";
 import { STUDY_PHASES, phaseProgress, recommendedPhase } from "@/lib/studypath";
 
-const EMPTY: AppProgress = { domains: {}, activities: [], streak: 0, lastActiveDate: "", studyTimeSeconds: 0 };
+const EMPTY: AppProgress = { domains: {}, activities: [], streak: 0, lastActiveDate: "", studyTimeSeconds: 0, xp: 0 };
 
 function domainLabel(id: string): string {
   return DOMAINS.find((d) => d.id === id)?.label ?? id;

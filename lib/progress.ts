@@ -1,4 +1,5 @@
 "use client";
+import { XP } from "./xp";
 import type { AppProgress, Domain, Activity } from "./types";
 
 const KEY = "netforge_progress";
@@ -40,6 +41,8 @@ export function recordQuizResult(
     time: new Date().toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" }),
   };
   p.activities = [act, ...p.activities].slice(0, 20);
+  const earned = correct * XP.correctAnswer + XP.quizComplete;
+  p.xp = (p.xp ?? 0) + earned;
 
   const today = new Date().toDateString();
   if (p.lastActiveDate !== today) {
@@ -57,6 +60,12 @@ export function addStudyTime(seconds: number): void {
   saveProgress(p);
 }
 
+export function addXp(amount: number): void {
+  const p = getProgress();
+  p.xp = (p.xp ?? 0) + amount;
+  saveProgress(p);
+}
+
 function defaultProgress(): AppProgress {
   return {
     domains: {},
@@ -64,5 +73,6 @@ function defaultProgress(): AppProgress {
     streak: 0,
     lastActiveDate: "",
     studyTimeSeconds: 0,
+    xp: 0,
   };
 }
