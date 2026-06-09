@@ -4,10 +4,11 @@ import { useSearchParams } from "next/navigation";
 import QuizConfig from "./QuizConfig";
 import QuizCard from "./QuizCard";
 import QuizResults from "./QuizResults";
-import { getQuestions } from "@/lib/questions";
+import { getQuestions, getQuestionsByIds } from "@/lib/questions";
 import { recordQuizResult } from "@/lib/progress";
+import { saveAttempt, getWrongQuestionIds } from "@/lib/quizdb";
 import { DOMAINS } from "@/lib/types";
-import type { Question, Domain, Difficulty } from "@/lib/types";
+import type { Question, Domain, Difficulty, QuizAttempt } from "@/lib/types";
 
 type Phase = "config" | "quiz" | "results";
 
@@ -28,12 +29,37 @@ function QuizPageInner() {
 
   const [phase, setPhase] = useState<Phase>("config");
   const [quiz, setQuiz] = useState<QuizState | null>(null);
+  const [configDomain, setConfigDomain] = useState<Domain | "all">(initialDomain);
+  const [configDifficulty, setConfigDifficulty] = useState<Difficulty | "all">("all");
 
-  function startQuiz(domain: Domain | "all", count: number, difficulty: Difficulty | "all") {
-    const qs = getQuestions({ domain, count, difficulty });
+  function startQuiz(
+    domain: Domain | "all",
+    count: number,
+    difficulty: Difficulty | "all",
+    fromWrongIds?: string[]
+  ) {
+    let qs: Question[];
+    if (fromWrongIds && fromWrongIds.length > 0) {
+      qs = getQuestionsByIds(fromWrongIds).slice(0, count);
+    } else {
+      qs = getQuestions({ domain, count, difficulty });
+    }
     if (!qs.length) return;
-    setQuiz({ questions: qs, current: 0, answers: new Array(qs.length).fill(null), startTime: Date.now() });
+    setConfigDomain(domain);
+    setConfigDifficulty(difficulty);
+    setQuiz({
+      questions: qs,
+      current: 0,
+      answers: new Array(qs.length).fill(null),
+      startTime: Date.now(),
+    });
     setPhase("quiz");
+  }
+
+  async function startRepeatWrong(count: number) {
+    const ids = await getWrongQuestionIds(count);
+    if (!ids.length) return;
+    startQuiz("all", count, "all", ids);
   }
 
   function handleAnswer(idx: number) {
@@ -41,14 +67,27 @@ function QuizPageInner() {
     const updated = [...quiz.answers];
     updated[quiz.current] = idx;
     if (quiz.current + 1 >= quiz.questions.length) {
-      // Last question answered — wait for next tick then go to results
-      setQuiz({ ...quiz, answers: updated });
-      setTimeout(() => {
-        const correct = updated.filter((a, i) => a === quiz.questions[i].correct).length;
-        const dom = quiz.questions[0].domain;
-        recordQuizResult(dom, correct, quiz.questions.length);
-        setPhase("results");
-      }, 800);
+      const finalQuiz = { ...quiz, answers: updated };
+      setQuiz(finalQuiz);
+      const correct = updated.filter((a, i) => a === finalQuiz.questions[i].correct).length;
+      const dom = finalQuiz.questions[0].domain;
+      recordQuizResult(dom, correct, finalQuiz.questions.length);
+
+      const attempt: QuizAttempt = {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        domain: configDomain,
+        difficulty: configDifficulty,
+        total: finalQuiz.questions.length,
+        correct,
+        results: finalQuiz.questions.map((q, i) => ({
+          questionId: q.id,
+          chosen: updated[i],
+          correct: updated[i] === q.correct,
+        })),
+      };
+      saveAttempt(attempt);
+      setPhase("results");
     } else {
       setQuiz({ ...quiz, answers: updated, current: quiz.current + 1 });
     }
@@ -67,7 +106,11 @@ function QuizPageInner() {
           <span style={{ width: 1, height: 16, background: "var(--border)" }} />
           <span style={{ fontSize: 11, color: "var(--text-dim)" }}>CCNA 200-301</span>
         </header>
-        <QuizConfig onStart={startQuiz} initialDomain={initialDomain} />
+        <QuizConfig
+          onStart={startQuiz}
+          onRepeatWrong={startRepeatWrong}
+          initialDomain={initialDomain}
+        />
       </div>
     );
   }
@@ -84,10 +127,9 @@ function QuizPageInner() {
           </div>
           <button onClick={restart} className="nf-btn-secondary" style={{ fontSize: 10 }}>Avbryt</button>
         </div>
-        {/* Progress bar */}
         <div className="glow-bar-track" style={{ marginBottom: 24, height: 3 }}>
           <div className="glow-bar-fill" style={{
-            width: `${((quiz.current) / quiz.questions.length) * 100}%`,
+            width: `${(quiz.current / quiz.questions.length) * 100}%`,
             background: "linear-gradient(90deg, var(--cyan), var(--purple))",
             boxShadow: "0 0 8px #00e5ff40",
           }} />
@@ -96,6 +138,7 @@ function QuizPageInner() {
           question={quiz.questions[quiz.current]}
           selectedAnswer={quiz.answers[quiz.current]}
           onAnswer={handleAnswer}
+          isLast={quiz.current + 1 === quiz.questions.length}
         />
       </div>
     );
@@ -111,6 +154,7 @@ function QuizPageInner() {
           correct={correct}
           elapsed={Math.round((Date.now() - quiz.startTime) / 1000)}
           onRestart={restart}
+          onRepeatWrong={startRepeatWrong}
         />
       </div>
     );
