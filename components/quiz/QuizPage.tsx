@@ -5,7 +5,8 @@ import QuizConfig from "./QuizConfig";
 import QuizCard from "./QuizCard";
 import QuizResults from "./QuizResults";
 import { getQuestions, getQuestionsByIds } from "@/lib/questions";
-import { recordQuizResult } from "@/lib/progress";
+import { finishQuiz } from "@/lib/progress";
+import type { QuizAnswerDetail } from "@/lib/progress";
 import { saveAttempt, getWrongQuestionIds } from "@/lib/quizdb";
 import { DOMAINS } from "@/lib/types";
 import type { Question, Domain, Difficulty, QuizAttempt } from "@/lib/types";
@@ -71,8 +72,12 @@ function QuizPageInner() {
       setQuiz(finalQuiz);
       const correct = updated.filter((a, i) => a === finalQuiz.questions[i].correct).length;
 
-      // Group by domain so mixed quizzes update each domain's progress correctly
+      // Group by domain
       const domainResults = new Map<Domain, { correct: number; total: number }>();
+      const answerDetails: QuizAnswerDetail[] = finalQuiz.questions.map((q, i) => ({
+        difficulty: q.difficulty,
+        correct: updated[i] === q.correct,
+      }));
       finalQuiz.questions.forEach((q, i) => {
         const prev = domainResults.get(q.domain) ?? { correct: 0, total: 0 };
         domainResults.set(q.domain, {
@@ -80,7 +85,7 @@ function QuizPageInner() {
           total: prev.total + 1,
         });
       });
-      domainResults.forEach((stats, dom) => recordQuizResult(dom, stats.correct, stats.total));
+      finishQuiz(domainResults, answerDetails, correct, finalQuiz.questions.length);
 
       const attempt: QuizAttempt = {
         id: crypto.randomUUID(),

@@ -7,6 +7,7 @@ const navItems = [
   { label: "Studieväg",  href: "/studyvag",   icon: "✦" },
   { label: "Topologier", href: "/topologier", icon: "◈" },
   { label: "Quiz",       href: "/quiz",       icon: "▤" },
+  { label: "Prov",       href: "/prov",       icon: "📋" },
   { label: "Subnetting", href: "/subnetting", icon: "⊟" },
   { label: "Resurser",   href: "/resurser",   icon: "▶" },
 ];

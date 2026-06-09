@@ -128,6 +128,23 @@ export default function QuizCard({ question, selectedAnswer, onAnswer, isLast }:
           <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.7, marginBottom: 14 }}>
             {question.explanation}
           </div>
+          {chosen !== question.correct && (
+            <div style={{ marginBottom: 10 }}>
+              <a
+                href={`/resurser?domain=${question.domain}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  fontSize: 10.5, color: "var(--cyan)",
+                  textDecoration: "none", padding: "4px 10px", borderRadius: 4,
+                  background: "#00e5ff08", border: "1px solid #00e5ff25",
+                }}
+              >
+                📚 Se video om {question.domain.replace(/-/g, " ")} →
+              </a>
+            </div>
+          )}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button
               onClick={handleNext}

@@ -1,5 +1,6 @@
 import type { Protocol, Difficulty, GeneratorKey } from "@/lib/topology";
 import type { Domain } from "@/lib/types";
+import type { VerificationCheck } from "@/lib/labverify";
 
 export interface LabEntry {
   id: string;
@@ -12,10 +13,10 @@ export interface LabEntry {
   description: string;
   generatorKey: GeneratorKey;
   tasksOverride?: string[];
+  verificationChecks?: VerificationCheck[];
 }
 
 export const LAB_CATALOG: LabEntry[] = [
-  // ── Fas 1 — Grunderna (Jeremy Day 11) ──────────────────────────────────────
   {
     id: "static-routes-basic",
     phase: 1,
@@ -26,13 +27,24 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "ip-connectivity",
     description:
       "Konfigurera statisk routing för att koppla ihop två LAN via en kedja av routrar. Inga dynamiska routingprotokoll — varje nätverk anges manuellt.",
-    generatorKey: "ospf-chain-latt",
+    generatorKey: "protocol-OSPF-Lätt",
     tasksOverride: [
       "Konfigurera IP-adresser på alla router-interface (ip address + no shutdown)",
       "Lägg till statiska routes: ip route <destination> <mask> <next-hop>",
       "Konfigurera default route (0.0.0.0 0.0.0.0 <next-hop>) mot internet",
       "Verifiera routingtabellen: show ip route",
       "Testa konnektion: ping PC-1 → SRV-1",
+    ],
+    verificationChecks: [
+      { id: "hostname",      description: "Hostname konfigurerat",                 pattern: "hostname \\w+",                            required: false },
+      { id: "ip-addr",       description: "IP-adress på interface",                 pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+",     required: true,  hint: "ip address <ip> <mask> under interface" },
+      { id: "no-shut",       description: "Interface aktiverat",                    pattern: "no shutdown",                              required: true,  hint: "no shutdown under varje interface" },
+      { id: "ip-route",      description: "Statisk route konfigurerad",             pattern: "ip route \\d+\\.\\d+\\.\\d+\\.\\d+",       required: true,  hint: "ip route <dest> <mask> <next-hop>" },
+      { id: "default-route", description: "Default route konfigurerad",             pattern: "ip route 0\\.0\\.0\\.0 0\\.0\\.0\\.0",     required: false, hint: "ip route 0.0.0.0 0.0.0.0 <next-hop>" },
+      { id: "multi-routes",  description: "Minst en WAN-adress (255.255.255.252)",  pattern: "255\\.255\\.255\\.252",                     required: false },
+      { id: "intf-desc",     description: "Interface har beskrivning",              pattern: " description ",                            required: false },
+      { id: "lan-addr",      description: "LAN-adress (192.168.x.x) konfigurerad", pattern: "192\\.168\\.\\d+\\.\\d+",                   required: false },
+      { id: "gig-intf",      description: "GigabitEthernet-interface konfigurerat", pattern: "interface GigabitEthernet",                 required: false },
     ],
   },
   {
@@ -45,7 +57,7 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "ip-connectivity",
     description:
       "Statisk routing med floating static routes som backup. Öva felsökning när en länk går ner.",
-    generatorKey: "ospf-chain-medel",
+    generatorKey: "protocol-OSPF-Medel",
     tasksOverride: [
       "Konfigurera primär statisk route (administrative distance 1)",
       "Lägg till floating static route (AD 5) som backup-path",
@@ -53,9 +65,50 @@ export const LAB_CATALOG: LabEntry[] = [
       "Verifiera routingtabellen: show ip route — kontrollera AD och metric",
       "Simulera failover: no shutdown / shutdown på ett interface och verifiera backup-routen",
     ],
+    verificationChecks: [
+      { id: "hostname",       description: "Hostname konfigurerat",                pattern: "hostname \\w+",                            required: false },
+      { id: "ip-addr",        description: "IP-adress på interface",                pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+",     required: true,  hint: "ip address <ip> <mask>" },
+      { id: "no-shut",        description: "Interface aktiverat",                   pattern: "no shutdown",                              required: true,  hint: "no shutdown under varje interface" },
+      { id: "ip-route",       description: "Primär statisk route konfigurerad",     pattern: "ip route \\d+\\.\\d+\\.\\d+\\.\\d+",       required: true,  hint: "ip route <dest> <mask> <next-hop>" },
+      { id: "floating-route", description: "Floating route (AD > 1) konfigurerad", pattern: "ip route .+ [2-9]\\d*$",                   required: false, hint: "Lägg till AD efter next-hop: ip route ... 5" },
+      { id: "default-route",  description: "Default route konfigurerad",            pattern: "ip route 0\\.0\\.0\\.0 0\\.0\\.0\\.0",     required: false },
+      { id: "wan-mask",       description: "/30 WAN-mask konfigurerad",             pattern: "255\\.255\\.255\\.252",                     required: false },
+      { id: "lan-addr",       description: "LAN-adress konfigurerad",               pattern: "192\\.168\\.\\d+\\.\\d+",                   required: false },
+      { id: "intf-desc",      description: "Interface har beskrivning",             pattern: " description ",                            required: false },
+      { id: "multi-intf",     description: "Flera interface konfigurerade",         pattern: "interface GigabitEthernet",                 required: false },
+    ],
   },
 
-  // ── Fas 2 — Switchning (Jeremy Day 16–22) ──────────────────────────────────
+  {
+    id: "vlan-basic",
+    phase: 2,
+    jeremyDay: 16,
+    title: "VLANs — Grundkonfiguration",
+    protocol: "VLANs",
+    difficulty: "Lätt",
+    domain: "network-access",
+    description: "Skapa VLAN och konfigurera access-portar på en switch. Första steget i switch-konfiguration — förstå skillnaden mellan VLAN-databas och port-tilldelning.",
+    generatorKey: "protocol-VLANs-Lätt",
+    tasksOverride: [
+      "Skapa VLAN 10 (name SALES) och VLAN 20 (name HR) i switch-databasen (vlan 10, name SALES)",
+      "Tilldela access-portar till respektive VLAN (switchport mode access + switchport access vlan)",
+      "Aktivera spanning-tree portfast på access-portarna",
+      "Verifiera VLAN-databasen: show vlan brief",
+      "Verifiera port-tilldelning: show interfaces switchport",
+    ],
+    verificationChecks: [
+      { id: "hostname",    description: "Hostname konfigurerat",               pattern: "hostname \\w+",                     required: false },
+      { id: "vlan-db",     description: "VLAN skapat i databasen",             pattern: "^vlan \\d+",                        required: true,  hint: "vlan <id> i global config-läge" },
+      { id: "vlan-name",   description: "VLAN har ett namn",                   pattern: "^ name \\w+",                       required: true,  hint: "name <NAMN> direkt under vlan <id>" },
+      { id: "vlan10",      description: "VLAN 10 finns",                       pattern: "vlan 10",                           required: true,  hint: "vlan 10 → name SALES" },
+      { id: "vlan20",      description: "VLAN 20 finns",                       pattern: "vlan 20",                           required: true,  hint: "vlan 20 → name HR" },
+      { id: "sw-access",   description: "Access-port konfigurerad",            pattern: "switchport mode access",            required: true,  hint: "switchport mode access under interface" },
+      { id: "sw-vlan",     description: "VLAN tilldelat till port",            pattern: "switchport access vlan \\d+",       required: true,  hint: "switchport access vlan <id>" },
+      { id: "portfast",    description: "PortFast aktivt på access-portar",    pattern: "spanning-tree portfast",            required: false, hint: "spanning-tree portfast under access-interface" },
+      { id: "fa-intf",     description: "FastEthernet/GigabitEthernet konfigurerat", pattern: "interface (FastEthernet|GigabitEthernet)", required: false },
+      { id: "no-shut",     description: "Interface aktiverat",                  pattern: "no shutdown",                       required: false },
+    ],
+  },
   {
     id: "vlans-roas",
     phase: 2,
@@ -66,7 +119,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "network-access",
     description:
       "Inter-VLAN routing via sub-interfaces (dot1Q encapsulation) på R1. VLAN 10 och VLAN 20 routas av en router kopplad till en trunk-port.",
-    generatorKey: "vlan-roas-latt",
+    generatorKey: "protocol-VLANs-Lätt",
+    verificationChecks: [
+      { id: "vlan-db",     description: "VLAN skapat i databasen",             pattern: "vlan \\d+",                         required: true,  hint: "Skapa VLAN med: vlan <id>" },
+      { id: "vlan-name",   description: "VLAN har ett namn",                   pattern: "^ name \\w+",                       required: false, hint: "name <NAMN> under vlan <id>" },
+      { id: "sw-access",   description: "Access-port konfigurerad",            pattern: "switchport mode access",            required: false },
+      { id: "sw-trunk",    description: "Trunk-port konfigurerad",             pattern: "switchport mode trunk",             required: true,  hint: "switchport mode trunk mot routern" },
+      { id: "sub-intf",    description: "Sub-interface på routern",            pattern: "interface .+\\.\\d+",               required: true,  hint: "interface Gig0/0.10 och .20" },
+      { id: "encap",       description: "Dot1Q encapsulation konfigurerad",    pattern: "encapsulation dot1[Qq]",            required: true,  hint: "encapsulation dot1Q <vlan-id> under sub-interface" },
+      { id: "ip-sub",      description: "IP-adress på sub-interface",          pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",     description: "Interface aktiverat",                  pattern: "no shutdown",                       required: true },
+      { id: "sw-vlan",     description: "VLAN tilldelat till access-portar",   pattern: "switchport access vlan \\d+",       required: false },
+      { id: "intf-desc",   description: "Interface har beskrivning",           pattern: " description ",                    required: false },
+    ],
   },
   {
     id: "vlans-l3switch",
@@ -78,7 +143,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "network-access",
     description:
       "Inter-VLAN routing med L3-switch och SVIs (Switched Virtual Interfaces). Mer skalbar lösning än Router-on-a-Stick — används i moderna nätverk.",
-    generatorKey: "vlan-l3-medel",
+    generatorKey: "protocol-VLANs-Medel",
+    verificationChecks: [
+      { id: "vlan-db",     description: "VLAN skapat i databasen",             pattern: "vlan \\d+",                         required: true,  hint: "vlan <id> i global config" },
+      { id: "vlan-name",   description: "VLAN har ett namn",                   pattern: "^ name \\w+",                       required: false },
+      { id: "sw-trunk",    description: "Trunk-portar konfigurerade",          pattern: "switchport mode trunk",             required: true,  hint: "switchport mode trunk mot access-switchar" },
+      { id: "sw-access",   description: "Access-portar konfigurerade",        pattern: "switchport mode access",            required: true },
+      { id: "sw-vlan",     description: "VLAN tilldelat till access-portar",   pattern: "switchport access vlan \\d+",       required: true },
+      { id: "svi",         description: "SVI (VLAN interface) konfigurerad",   pattern: "interface [Vv]lan",                 required: true,  hint: "interface Vlan10 och Vlan20 på L3-switchen" },
+      { id: "svi-ip",      description: "IP-adress på SVI",                    pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true, hint: "ip address under interface Vlan<id>" },
+      { id: "ip-routing",  description: "IP routing aktiverat",                pattern: "ip routing",                        required: true,  hint: "ip routing i global config på L3-switchen" },
+      { id: "no-shut",     description: "SVI interface aktiverat",             pattern: "no shutdown",                       required: false },
+      { id: "portfast",    description: "PortFast på access-portar",           pattern: "spanning-tree portfast",            required: false },
+    ],
   },
   {
     id: "stp-triangle",
@@ -90,7 +167,18 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "network-access",
     description:
       "Analysera Spanning Tree Protocol i en triangeltopologi. Identifiera root bridge, root ports och blocked port för att förhindra loop.",
-    generatorKey: "stp-triangle-latt",
+    generatorKey: "protocol-STP-Lätt",
+    verificationChecks: [
+      { id: "root-id",     description: "Root bridge synlig i output",         pattern: "Root ID",                           required: true,  hint: "Kör show spanning-tree och klistra in output" },
+      { id: "bridge-id",   description: "Bridge ID synlig",                    pattern: "Bridge ID",                         required: true,  hint: "Verifiera att du ser Bridge ID-raden" },
+      { id: "priority",    description: "Bridge priority i output",            pattern: "Priority\\s+\\d+",                   required: true  },
+      { id: "root-port",   description: "Root Port identifierad",              pattern: "Root Port",                         required: false },
+      { id: "desg-port",   description: "Designated Port synlig",              pattern: "Desg|Designated",                   required: false },
+      { id: "altn-port",   description: "Alternate/blocked port synlig",       pattern: "Altn|BLK",                          required: false, hint: "En port ska vara blocked i triangeltopologi" },
+      { id: "fwd-state",   description: "Port i forwarding-state (FWD)",       pattern: "FWD",                               required: false },
+      { id: "mac-addr",    description: "MAC-adress i Bridge ID",              pattern: "([0-9a-f]{4}\\.){2}[0-9a-f]{4}",   required: false },
+      { id: "cost",        description: "Port cost i output",                  pattern: "Cost\\s+\\d+",                      required: false },
+    ],
   },
   {
     id: "stp-square",
@@ -102,7 +190,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "network-access",
     description:
       "Konfigurera önskad root bridge med spanning-tree priority. Analysera STP-konvergering i en kvadrattopologi med fyra switchar.",
-    generatorKey: "stp-square-medel",
+    generatorKey: "protocol-STP-Medel",
+    verificationChecks: [
+      { id: "root-id",     description: "Root bridge synlig i output",         pattern: "Root ID",                           required: true  },
+      { id: "bridge-id",   description: "Bridge ID synlig",                    pattern: "Bridge ID",                         required: true  },
+      { id: "priority",    description: "Bridge priority i output",            pattern: "Priority\\s+\\d+",                   required: true  },
+      { id: "low-prio",    description: "Låg priority konfigurerad (≤ 4096)",  pattern: "Priority\\s+[0-9]{1,4}\\b",         required: false, hint: "spanning-tree vlan 1 priority 4096 på root-switchen" },
+      { id: "root-port",   description: "Root Port identifierad",              pattern: "Root Port",                         required: false },
+      { id: "desg-port",   description: "Designated Port synlig",              pattern: "Desg|Designated",                   required: false },
+      { id: "altn-port",   description: "Alternate/blocked port synlig",       pattern: "Altn|BLK",                          required: true,  hint: "En port ska vara blocked — kvadrattopologi ger en blocked port" },
+      { id: "fwd-state",   description: "Port i forwarding-state (FWD)",       pattern: "FWD",                               required: false },
+      { id: "this-root",   description: "Denna switch är root bridge",        pattern: "This bridge is the root",           required: false },
+      { id: "cost",        description: "Port cost i output",                  pattern: "Cost\\s+\\d+",                      required: false },
+    ],
   },
   {
     id: "rstp",
@@ -114,10 +214,21 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "network-access",
     description:
       "Rapid Spanning Tree Protocol — snabbare konvergering än klassisk STP. Identifiera portroller (Root, Designated, Alternate, Backup) och portlägen (Discarding, Learning, Forwarding).",
-    generatorKey: "stp-square-svar",
+    generatorKey: "protocol-STP-Svår",
+    verificationChecks: [
+      { id: "root-id",     description: "Root bridge synlig i output",         pattern: "Root ID",                           required: true  },
+      { id: "bridge-id",   description: "Bridge ID synlig",                    pattern: "Bridge ID",                         required: true  },
+      { id: "priority",    description: "Bridge priority i output",            pattern: "Priority\\s+\\d+",                   required: true  },
+      { id: "rstp-mode",   description: "RSTP-läge aktivt",                   pattern: "rapid-pvst|rstp",                   required: false, hint: "spanning-tree mode rapid-pvst" },
+      { id: "altn-port",   description: "Alternate port synlig",               pattern: "Altn",                              required: false },
+      { id: "fwd-state",   description: "Port i forwarding-state",             pattern: "FWD",                               required: false },
+      { id: "discarding",  description: "Port i discarding-state (RSTP)",     pattern: "Discarding|BLK",                    required: false },
+      { id: "edge-port",   description: "Edge port (PortFast) synlig",        pattern: "Edge",                              required: false },
+      { id: "p2p",         description: "Point-to-point link-type",            pattern: "P2p",                               required: false },
+      { id: "desg-port",   description: "Designated Port synlig",              pattern: "Desg",                              required: false },
+    ],
   },
 
-  // ── Fas 3 — Routing (Jeremy Day 25–28) ─────────────────────────────────────
   {
     id: "ospf-single",
     phase: 3,
@@ -128,7 +239,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "ip-connectivity",
     description:
       "OSPF process 1 med alla routrar i Area 0. Verifiera grannskap med show ip ospf neighbor och kontrollera att alla nät annonseras korrekt.",
-    generatorKey: "ospf-chain-latt",
+    generatorKey: "protocol-OSPF-Lätt",
+    verificationChecks: [
+      { id: "hostname",     description: "Hostname konfigurerat",              pattern: "hostname \\w+",                     required: false },
+      { id: "ip-addr",      description: "IP-adress på interface",              pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true, hint: "ip address under interface" },
+      { id: "no-shut",      description: "Interface aktiverat",                 pattern: "no shutdown",                       required: true  },
+      { id: "ospf-proc",    description: "OSPF-process konfigurerad",          pattern: "router ospf \\d+",                  required: true,  hint: "router ospf <process-id>" },
+      { id: "network-stmt", description: "Network statement finns",             pattern: "network .+area",                    required: true,  hint: "network <ip> <wildcard> area <area-id>" },
+      { id: "area0",        description: "Area 0 (backbone) specificerad",     pattern: "area 0",                            required: true,  hint: "area 0 i network-statement" },
+      { id: "router-id",    description: "Router-ID konfigurerat",              pattern: "router-id \\d+\\.\\d+\\.\\d+\\.\\d+", required: false, hint: "router-id <loopback-ip>" },
+      { id: "passive-intf", description: "Passivt LAN-interface konfigurerat", pattern: "passive-interface",                 required: false },
+      { id: "neighbor",     description: "OSPF-grannskap FULL",                 pattern: "FULL",                              required: false, hint: "Klistra in output från show ip ospf neighbor" },
+      { id: "ospf-route",   description: "OSPF-route i routingtabellen (O)",   pattern: "\\bO\\b",                           required: false, hint: "Klistra in show ip route och leta efter O-routes" },
+    ],
   },
   {
     id: "ospf-multi",
@@ -140,7 +263,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "ip-connectivity",
     description:
       "OSPF Multi-Area med Area 0 (backbone) och Area 1. ABR-routern kopplar de två områdena och redistribuerar inter-area LSAer.",
-    generatorKey: "ospf-hubspoke-medel",
+    generatorKey: "protocol-OSPF-Medel",
+    verificationChecks: [
+      { id: "hostname",     description: "Hostname konfigurerat",              pattern: "hostname \\w+",                     required: false },
+      { id: "ip-addr",      description: "IP-adress på interface",              pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",      description: "Interface aktiverat",                 pattern: "no shutdown",                       required: true  },
+      { id: "ospf-proc",    description: "OSPF-process konfigurerad",          pattern: "router ospf \\d+",                  required: true,  hint: "router ospf <process-id>" },
+      { id: "network-stmt", description: "Network statement finns",             pattern: "network .+area",                    required: true,  hint: "network <ip> <wildcard> area <area-id>" },
+      { id: "area0",        description: "Area 0 (backbone) specificerad",     pattern: "area 0",                            required: true  },
+      { id: "area1",        description: "Area 1 konfigurerad",                pattern: "area 1",                            required: true,  hint: "network <ip> <wildcard> area 1 på spoke-routrarna" },
+      { id: "router-id",    description: "Router-ID konfigurerat",              pattern: "router-id \\d+\\.\\d+\\.\\d+\\.\\d+", required: false },
+      { id: "neighbor",     description: "OSPF-grannskap FULL",                 pattern: "FULL",                              required: false, hint: "show ip ospf neighbor" },
+      { id: "inter-area",   description: "Inter-area route (O IA) i tabellen", pattern: "O IA",                              required: false, hint: "show ip route och leta efter O IA" },
+    ],
   },
   {
     id: "eigrp-hub",
@@ -152,10 +287,21 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "ip-connectivity",
     description:
       "EIGRP AS 100 i hub-and-spoke topologi. R1 är hub och annonserar nät till spoke-routrarna. Verifiera grannskap och EIGRP-routes.",
-    generatorKey: "eigrp-medel",
+    generatorKey: "protocol-EIGRP-Medel",
+    verificationChecks: [
+      { id: "hostname",     description: "Hostname konfigurerat",              pattern: "hostname \\w+",                     required: false },
+      { id: "ip-addr",      description: "IP-adress på interface",              pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",      description: "Interface aktiverat",                 pattern: "no shutdown",                       required: true  },
+      { id: "eigrp-as",     description: "EIGRP AS-nummer konfigurerat",       pattern: "router eigrp \\d+",                 required: true,  hint: "router eigrp <AS-nummer>" },
+      { id: "network",      description: "Network statement konfigurerat",     pattern: "network \\d+\\.\\d+\\.\\d+\\.\\d+", required: true,  hint: "network <ip> <wildcard>" },
+      { id: "no-auto",      description: "Auto-summary inaktiverat",           pattern: "no auto-summary",                   required: false, hint: "no auto-summary under router eigrp" },
+      { id: "passive",      description: "Passivt interface konfigurerat",     pattern: "passive-interface",                 required: false },
+      { id: "wildcard",     description: "Wildcard-mask använd",               pattern: "network .+0\\.0\\.0\\.",             required: false },
+      { id: "neighbor",     description: "EIGRP-grannskap aktivt",             pattern: "FULL|UP",                           required: false, hint: "show ip eigrp neighbors" },
+      { id: "eigrp-route",  description: "EIGRP-route (D) i routingtabellen", pattern: "\\bD\\b",                           required: false, hint: "show ip route — D = EIGRP" },
+    ],
   },
 
-  // ── Fas 4 — Säkerhet & Automation (Jeremy Day 34–45) ───────────────────────
   {
     id: "acl-standard",
     phase: 4,
@@ -166,7 +312,18 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "security-fundamentals",
     description:
       "Standard ACL filtrerar trafik baserat på source-IP. Appliceras nära destinationen. Enkel att konfigurera men erbjuder begränsad kontroll.",
-    generatorKey: "acl-latt",
+    generatorKey: "protocol-ACLs-Lätt",
+    verificationChecks: [
+      { id: "hostname",     description: "Hostname konfigurerat",              pattern: "hostname \\w+",                     required: false },
+      { id: "ip-addr",      description: "IP-adress på interface",              pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",      description: "Interface aktiverat",                 pattern: "no shutdown",                       required: true  },
+      { id: "acl-def",      description: "ACL definierad",                      pattern: "(ip access-list|access-list \\d+)",  required: true,  hint: "ip access-list standard <namn> eller access-list <nr>" },
+      { id: "acl-deny",     description: "Deny-regel konfigurerad",             pattern: "\\bdeny\\b",                        required: true,  hint: "deny <source-ip> <wildcard>" },
+      { id: "acl-permit",   description: "Permit-regel (explicit eller implicit)", pattern: "\\bpermit\\b",                  required: false, hint: "permit any i slutet av listan" },
+      { id: "acl-applied",  description: "ACL applicerad på interface",        pattern: "ip access-group .+(in|out)",        required: true,  hint: "ip access-group <namn> in/out under interface" },
+      { id: "acl-source",   description: "Source-IP i ACL-regeln",             pattern: "deny \\d+\\.\\d+\\.\\d+\\.\\d+",   required: false },
+      { id: "near-dest",    description: "ACL på interface nära destinationen", pattern: "ip access-group .+\\s(in|out)",    required: false },
+    ],
   },
   {
     id: "acl-extended",
@@ -178,7 +335,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "security-fundamentals",
     description:
       "Extended ACL matchar på source-IP, destination-IP och protokoll. Appliceras nära källan för effektivare filtrering.",
-    generatorKey: "acl-medel",
+    generatorKey: "protocol-ACLs-Medel",
+    verificationChecks: [
+      { id: "hostname",     description: "Hostname konfigurerat",              pattern: "hostname \\w+",                     required: false },
+      { id: "ip-addr",      description: "IP-adress på interface",              pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",      description: "Interface aktiverat",                 pattern: "no shutdown",                       required: true  },
+      { id: "acl-def",      description: "Extended ACL definierad",             pattern: "(ip access-list extended|access-list \\d+)", required: true, hint: "ip access-list extended <namn>" },
+      { id: "acl-deny",     description: "Deny-regel konfigurerad",             pattern: "deny (ip|tcp|udp|icmp)",            required: true,  hint: "deny <protokoll> <src> <dest>" },
+      { id: "acl-permit",   description: "Permit ip any any i slutet",         pattern: "permit ip any any",                 required: false, hint: "permit ip any any sist — annars blockeras all trafik" },
+      { id: "acl-applied",  description: "ACL applicerad på interface",        pattern: "ip access-group .+(in|out)",        required: true,  hint: "ip access-group <namn> in/out" },
+      { id: "near-src",     description: "ACL applicerad inbound nära källan", pattern: "ip access-group .+in",             required: false },
+      { id: "host-kw",      description: "host-nyckelordet använt",            pattern: "\\bhost \\d+\\.\\d+\\.\\d+\\.\\d+", required: false },
+      { id: "named-acl",    description: "Namngiven ACL använd (ej nummer)",   pattern: "ip access-list extended \\w+",     required: false },
+    ],
   },
   {
     id: "acl-extended-hard",
@@ -190,7 +359,19 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "security-fundamentals",
     description:
       "Komplex ACL-policy med flera permit/deny-regler för specifika hosts och subnät. Ordningen på reglerna är avgörande.",
-    generatorKey: "acl-svar",
+    generatorKey: "protocol-ACLs-Svår",
+    verificationChecks: [
+      { id: "hostname",     description: "Hostname konfigurerat",              pattern: "hostname \\w+",                     required: false },
+      { id: "ip-addr",      description: "IP-adress på interface",              pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",      description: "Interface aktiverat",                 pattern: "no shutdown",                       required: true  },
+      { id: "acl-def",      description: "Extended ACL definierad",             pattern: "(ip access-list extended|access-list \\d+)", required: true },
+      { id: "multi-deny",   description: "Minst två deny-regler",               pattern: "(deny .+\\n.*){2}",                 required: false, hint: "Flera deny-regler — ordning är avgörande" },
+      { id: "acl-permit",   description: "Permit ip any any i slutet",         pattern: "permit ip any any",                 required: true,  hint: "permit ip any any sist annars blockeras all trafik" },
+      { id: "acl-applied",  description: "ACL applicerad på interface",        pattern: "ip access-group .+(in|out)",        required: true },
+      { id: "tcp-rule",     description: "TCP-specifik regel konfigurerad",    pattern: "deny tcp|permit tcp",               required: false },
+      { id: "host-kw",      description: "host-nyckelordet använt",            pattern: "\\bhost \\d+\\.\\d+\\.\\d+\\.\\d+", required: false },
+      { id: "named-acl",    description: "Namngiven ACL använd",               pattern: "ip access-list extended \\w+",     required: false },
+    ],
   },
   {
     id: "nat-overload",
@@ -202,6 +383,18 @@ export const LAB_CATALOG: LabEntry[] = [
     domain: "ip-services",
     description:
       "NAT Overload (Port Address Translation) delar en publik IP-adress bland alla inside-enheter. Används i hemmanätverk och företag.",
-    generatorKey: "nat-medel",
+    generatorKey: "protocol-NAT-Medel",
+    verificationChecks: [
+      { id: "ip-addr",      description: "IP-adresser konfigurerade",           pattern: "ip address \\d+\\.\\d+\\.\\d+\\.\\d+", required: true },
+      { id: "no-shut",      description: "Interface aktiverat",                  pattern: "no shutdown",                       required: true  },
+      { id: "inside",       description: "Inside-interface märkt",              pattern: "ip nat inside",                     required: true,  hint: "ip nat inside under LAN-interface" },
+      { id: "outside",      description: "Outside-interface märkt",             pattern: "ip nat outside",                    required: true,  hint: "ip nat outside under WAN-interface" },
+      { id: "acl-nat",      description: "ACL för NAT-pool konfigurerad",       pattern: "access-list \\d+ permit",           required: true,  hint: "access-list <nr> permit <lan-nät> <wildcard>" },
+      { id: "nat-src",      description: "NAT source-mapping konfigurerad",    pattern: "ip nat inside source",              required: true,  hint: "ip nat inside source list <nr> interface <intf> overload" },
+      { id: "overload",     description: "PAT (overload) konfigurerat",        pattern: "\\boverload\\b",                    required: true,  hint: "Lägg till overload i slutet av ip nat-kommandot" },
+      { id: "nat-trans",    description: "Aktiv NAT-translation hittad",        pattern: "Inside global",                     required: false, hint: "Klistra in output från show ip nat translations" },
+      { id: "pat-ports",    description: "PAT-portar synliga i translation",    pattern: ":\\d{3,5}",                         required: false },
+      { id: "hostname",     description: "Hostname konfigurerat",               pattern: "hostname \\w+",                    required: false },
+    ],
   },
 ];

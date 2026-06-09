@@ -2,161 +2,156 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn quiz into a real training loop — answer → see explanation → click Nästa (no auto-jump), earn XP/levels from 0, save every attempt to IndexedDB, surface learning resources for missed questions, and add a "repetera felsvar" mode.
+**Goal:** Gör quiz till en riktig träningsloop — svara → reflektera → nästa, XP/nivåer från 0, resurser per felsvar, och IndexedDB-historik för att repetera fel.
 
-**Architecture:** Pure XP math in `lib/xp.ts`; XP counter stored in the existing localStorage `AppProgress`; append-only quiz history in a thin IndexedDB wrapper `lib/quizdb.ts`. UI changes in the quiz components and a dashboard XP card. No new dependencies, no backend.
+**Architecture:** Ren logik i `lib/` (xp.ts, quizdb.ts), typändringar i `lib/types.ts`, sedan UI-lager (QuizCard, QuizPage, QuizResults, QuizConfig, Dashboard). Ingen backend — localStorage för XP/räknare, IndexedDB för quiz-historik.
 
-**Tech Stack:** Next.js 15 App Router, React 19, TypeScript, localStorage, IndexedDB. Inline styles + CSS variables, existing `nf-card`/`glow-bar`/`nf-btn-*` classes.
+**Tech Stack:** Next.js 15 App Router · React 19 · TypeScript · inline CSS + CSS-variabler (`--cyan`, `--purple`, `--green`, `--red`, `--bg-base`, `--bg-surface`, `--bg-elevated`, `--border`, `--text`, `--text-dim`) · JetBrains Mono · `npx tsc --noEmit` för typkontroll
 
-Spec: `docs/superpowers/specs/2026-06-08-traningsloop-design.md`.
-
----
-
-## Testing note (read first)
-
-No test runner (no Jest/Vitest). Verification uses:
-- **Pure logic** (`lib/xp.ts`): ad-hoc `npx tsx` assertion script that exits non-zero on failure.
-- **Types:** `npx tsc --noEmit` after every task (safe while `npm run dev` runs — does NOT touch `.next/`).
-- **UI/runtime:** `curl` for 200s + manual browser checks.
-
-**Never run `npm run build` while `npm run dev` is running** — it corrupts `.next/`. If you see `Cannot find module './XXX.js'`: stop dev → delete `.next/` → restart dev.
-
-This is a git repo (`origin` = robbaking/netforge-ccna, branch `master`). Commit after each task.
+> **Backend-beslut (2026-06-08):** Supabase (auth + PostgreSQL) är bekräftat som nästa stora steg — men det kommer i en **separat spec** efter att Träningsloopen är klar. All kod i den här planen är designad för att fungera offline och kräver inga ändringar när Supabase läggs till senare.
 
 ---
 
-## File Structure
+## Filöversikt
 
-| File | Responsibility |
+| Fil | Åtgärd |
 |---|---|
-| `lib/xp.ts` | **Create.** XP constants + pure `levelFromXp`/`xpForLevel`/`xpProgress`. |
-| `lib/quizdb.ts` | **Create.** IndexedDB wrapper for the `attempts` store. |
-| `components/dashboard/XpCard.tsx` | **Create.** Level + XP + progress bar card. |
-| `lib/types.ts` | **Modify.** Add `xp` to `AppProgress`; add `QuizAttempt`. |
-| `lib/progress.ts` | **Modify.** Default `xp`, normalize on read, `addXp()`, award XP in `recordQuizResult`. |
-| `lib/questions.ts` | **Modify.** `getQuestionsByIds()`. |
-| `components/quiz/QuizCard.tsx` | **Modify.** Remove auto-advance; Nästa button; Enter/Space. |
-| `components/quiz/QuizPage.tsx` | **Modify.** `isLast`, save attempt, `startRepeat()`, QuizState domain/difficulty. |
-| `components/quiz/QuizResults.tsx` | **Modify.** Resources per missed domain + repeat button. |
-| `components/quiz/QuizConfig.tsx` | **Modify.** "Repetera felsvar" button (`onStartRepeat`). |
-| `components/dashboard/DashboardPage.tsx` | **Modify.** Render `XpCard`. |
-| `components/subnetting/SubnetTrainer.tsx` | **Modify.** Award subnetting XP. |
-| `components/topology/TopologyPage.tsx` | **Modify.** Award topology-lab XP. |
+| `lib/xp.ts` | **Ny** — XP-konstanter + `levelFromXp` / `xpForLevel` / `xpProgress` |
+| `lib/quizdb.ts` | **Ny** — IndexedDB-wrapper för `attempts` object store |
+| `lib/types.ts` | Lägg `xp: number` i `AppProgress`; lägg `QuizAttempt` interface |
+| `lib/progress.ts` | Lägg `addXp(amount)`; anropa `addXp` i `recordQuizResult` |
+| `lib/questions.ts` | Lägg `getQuestionsByIds(ids: string[]): Question[]` |
+| `components/quiz/QuizCard.tsx` | Ta bort `setTimeout`-auto-hopp; lägg Nästa-knapp; Enter/Space efter avslöjande |
+| `components/quiz/QuizPage.tsx` | Ta bort `setTimeout` vid sista fråga; spara `QuizAttempt` i IndexedDB; repetera-felsvar-läge |
+| `components/quiz/QuizResults.tsx` | Visa resurser per feldomän; "Repetera felsvar →"-knapp |
+| `components/quiz/QuizConfig.tsx` | Lägg "Repetera felsvar"-val som startar quiz från historik |
+| `components/dashboard/DashboardPage.tsx` | Lägg XP/nivå-kort med progressbar |
 
 ---
 
-## Task 1: XP logic module
+## Task 1: XP-logik (`lib/xp.ts`)
 
 **Files:**
-- Create: `lib/xp.ts`
-- Test (ad-hoc): `lib/xp.check.mts` (temporary, deleted in Step 4)
+- Create: `ccna-app/lib/xp.ts`
+- Create (temp, raderas efteråt): `ccna-app/lib/xp.test.ts`
 
-- [ ] **Step 1: Write `lib/xp.ts`**
+- [ ] **Steg 1: Skapa assertion-skript**
+
+Skapa `ccna-app/lib/xp.test.ts`:
 
 ```typescript
-// XP-konstanter och nivåkurva. Ren logik, ingen DOM — testbar.
+import { levelFromXp, xpForLevel, xpProgress } from "./xp";
 
+function assert(cond: boolean, msg: string) {
+  if (!cond) throw new Error(`FAIL: ${msg}`);
+  console.log(`PASS: ${msg}`);
+}
+
+assert(levelFromXp(0) === 1, "0 XP → nivå 1");
+assert(levelFromXp(99) === 1, "99 XP → nivå 1");
+assert(levelFromXp(100) === 2, "100 XP → nivå 2");
+assert(levelFromXp(399) === 2, "399 XP → nivå 2");
+assert(levelFromXp(400) === 3, "400 XP → nivå 3");
+assert(levelFromXp(899) === 3, "899 XP → nivå 3");
+assert(levelFromXp(900) === 4, "900 XP → nivå 4");
+
+assert(xpForLevel(1) === 0, "nivå 1 startar vid 0 XP");
+assert(xpForLevel(2) === 100, "nivå 2 startar vid 100 XP");
+assert(xpForLevel(3) === 400, "nivå 3 startar vid 400 XP");
+assert(xpForLevel(4) === 900, "nivå 4 startar vid 900 XP");
+
+const p = xpProgress(250);
+assert(p.level === 2, "250 XP → nivå 2");
+assert(p.intoLevel === 150, "250 XP → 150 in i nivå 2 (start=100)");
+assert(p.needed === 300, "nivå 2→3 kräver 300 XP");
+assert(p.pct === 50, "250 XP → 50% igenom nivå 2");
+
+console.log("Alla XP-tester godkända!");
+```
+
+- [ ] **Steg 2: Kör skriptet — förvänta FAIL**
+
+```
+cd ccna-app && npx tsx lib/xp.test.ts
+```
+
+Förväntat: `Error: Cannot find module './xp'`
+
+- [ ] **Steg 3: Skapa `lib/xp.ts`**
+
+```typescript
 export const XP = {
-  correctAnswer: 10,   // per rätt svar i quiz
-  quizComplete: 50,    // per avklarad quiz
-  subnettingRound: 30, // per kontrollerad subnetting-runda
-  topologyLab: 40,     // per topologi-labb markerad klar
+  correctAnswer: 10,
+  quizComplete: 50,
+  subnettingRound: 30,
+  topologyLab: 40,
 } as const;
 
-// Nivå från XP (kvadratisk kurva). Lvl 1: 0–99, Lvl 2: 100–399, Lvl 3: 400–899 …
 export function levelFromXp(xp: number): number {
   return Math.floor(Math.sqrt(Math.max(0, xp) / 100)) + 1;
 }
 
-// Kumulativ XP vid en nivås start.
 export function xpForLevel(level: number): number {
   return (level - 1) ** 2 * 100;
 }
 
-export interface XpProgress {
+export function xpProgress(xp: number): {
   level: number;
-  intoLevel: number; // XP in i nuvarande nivå
-  needed: number;    // XP som krävs för att klara nuvarande nivå
-  pct: number;       // 0–100 mot nästa nivå
-}
-
-export function xpProgress(xp: number): XpProgress {
+  intoLevel: number;
+  needed: number;
+  pct: number;
+} {
   const level = levelFromXp(xp);
   const start = xpForLevel(level);
   const next = xpForLevel(level + 1);
-  const intoLevel = Math.max(0, xp) - start;
+  const intoLevel = xp - start;
   const needed = next - start;
   return { level, intoLevel, needed, pct: Math.round((intoLevel / needed) * 100) };
 }
 ```
 
-- [ ] **Step 2: Write `lib/xp.check.mts`**
+- [ ] **Steg 4: Kör skriptet — förvänta PASS**
 
-```typescript
-import { XP, levelFromXp, xpForLevel, xpProgress } from "./xp";
-
-function assert(cond: boolean, msg: string) {
-  if (!cond) { console.error("FAIL:", msg); process.exit(1); }
-}
-
-assert(levelFromXp(0) === 1, "0 -> lvl1");
-assert(levelFromXp(99) === 1, "99 -> lvl1");
-assert(levelFromXp(100) === 2, "100 -> lvl2");
-assert(levelFromXp(399) === 2, "399 -> lvl2");
-assert(levelFromXp(400) === 3, "400 -> lvl3");
-assert(levelFromXp(900) === 4, "900 -> lvl4");
-
-assert(xpForLevel(1) === 0, "lvl1 starts 0");
-assert(xpForLevel(2) === 100, "lvl2 starts 100");
-assert(xpForLevel(3) === 400, "lvl3 starts 400");
-
-const a = xpProgress(0);
-assert(a.level === 1 && a.intoLevel === 0 && a.needed === 100 && a.pct === 0, "xpProgress(0)");
-const b = xpProgress(150);
-assert(b.level === 2 && b.intoLevel === 50 && b.needed === 300 && b.pct === 17, "xpProgress(150)");
-
-assert(XP.correctAnswer === 10 && XP.quizComplete === 50, "constants");
-
-console.log("ALL XP CHECKS PASSED");
+```
+cd ccna-app && npx tsx lib/xp.test.ts
 ```
 
-- [ ] **Step 3: Run it (expect pass)**
+Förväntat: `Alla XP-tester godkända!`
 
-Run: `cd ccna-app && npx tsx lib/xp.check.mts`
-Expected: `ALL XP CHECKS PASSED` (exit 0). If `FAIL: ...`, fix `lib/xp.ts` and re-run.
+- [ ] **Steg 5: Ta bort testfilen**
 
-- [ ] **Step 4: Delete the temp script + typecheck**
+```
+del ccna-app\lib\xp.test.ts
+```
 
-Run: `cd ccna-app && rm lib/xp.check.mts && npx tsc --noEmit`
-Expected: no output.
+- [ ] **Steg 6: Typkontroll**
 
-- [ ] **Step 5: Commit**
+```
+cd ccna-app && npx tsc --noEmit
+```
 
-```bash
-cd ccna-app && git add lib/xp.ts && git commit -m "feat(xp): add XP constants + level curve (pure logic)"
+Förväntat: ingen utdata (inga fel)
+
+- [ ] **Steg 7: Commit**
+
+```
+git add ccna-app/lib/xp.ts
+git commit -m "feat: add XP constants and level curve (lib/xp.ts)"
 ```
 
 ---
 
-## Task 2: Wire XP into types + progress
+## Task 2: Typuppdateringar (`lib/types.ts`)
 
 **Files:**
-- Modify: `lib/types.ts`
-- Modify: `lib/progress.ts`
+- Modify: `ccna-app/lib/types.ts`
 
-- [ ] **Step 1: Add `xp` to `AppProgress`**
+Nuläge i `AppProgress`: `{ domains, activities, streak, lastActiveDate, studyTimeSeconds }` — saknar `xp`. Nuläge i filen: inget `QuizAttempt`.
 
-In `lib/types.ts`, change:
-```typescript
-export interface AppProgress {
-  domains: Partial<Record<Domain, DomainProgress>>;
-  activities: Activity[];
-  streak: number;
-  lastActiveDate: string;
-  studyTimeSeconds: number;
-}
-```
-to (add the `xp` line):
+- [ ] **Steg 1: Lägg `xp` i `AppProgress` och ny `QuizAttempt`**
+
+Öppna `ccna-app/lib/types.ts`. Ersätt `AppProgress`-interfacet och lägg `QuizAttempt` efter det:
+
 ```typescript
 export interface AppProgress {
   domains: Partial<Record<Domain, DomainProgress>>;
@@ -166,368 +161,10 @@ export interface AppProgress {
   studyTimeSeconds: number;
   xp: number;
 }
-```
 
-- [ ] **Step 2: Default + normalize + award in `lib/progress.ts`**
-
-(a) Add the import at the top, under the existing `import type` line:
-```typescript
-import { XP } from "./xp";
-```
-
-(b) Normalize reads so old saved data without `xp` gets defaults. Replace:
-```typescript
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return defaultProgress();
-    return JSON.parse(raw) as AppProgress;
-```
-with:
-```typescript
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return defaultProgress();
-    const parsed = JSON.parse(raw) as Partial<AppProgress>;
-    return { ...defaultProgress(), ...parsed };
-```
-
-(c) Add `xp: 0` to `defaultProgress()`. Replace:
-```typescript
-  return {
-    domains: {},
-    activities: [],
-    streak: 0,
-    lastActiveDate: "",
-    studyTimeSeconds: 0,
-  };
-```
-with:
-```typescript
-  return {
-    domains: {},
-    activities: [],
-    streak: 0,
-    lastActiveDate: "",
-    studyTimeSeconds: 0,
-    xp: 0,
-  };
-```
-
-(d) Award quiz XP. In `recordQuizResult`, immediately BEFORE the final `saveProgress(p);`, add:
-```typescript
-  p.xp = (p.xp ?? 0) + correct * XP.correctAnswer + XP.quizComplete;
-```
-
-(e) Add an `addXp` helper. After the `addStudyTime` function, add:
-```typescript
-export function addXp(amount: number): void {
-  const p = getProgress();
-  p.xp = (p.xp ?? 0) + amount;
-  saveProgress(p);
-}
-```
-
-- [ ] **Step 3: Typecheck**
-
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
-
-- [ ] **Step 4: Commit**
-
-```bash
-cd ccna-app && git add lib/types.ts lib/progress.ts && git commit -m "feat(xp): store xp in AppProgress, award on quiz, add addXp()"
-```
-
----
-
-## Task 3: Dashboard XP/level card
-
-**Files:**
-- Create: `components/dashboard/XpCard.tsx`
-- Modify: `components/dashboard/DashboardPage.tsx`
-
-- [ ] **Step 1: Write `components/dashboard/XpCard.tsx`**
-
-```tsx
-"use client";
-import { xpProgress } from "@/lib/xp";
-
-export default function XpCard({ xp }: { xp: number }) {
-  const { level, intoLevel, needed, pct } = xpProgress(xp);
-  return (
-    <div className="nf-card" style={{ display: "flex", alignItems: "center", gap: 18 }}>
-      <div style={{
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        width: 64, height: 64, borderRadius: "50%", flexShrink: 0,
-        background: "linear-gradient(135deg, #00e5ff20, #7c4dff20)", border: "1px solid #00e5ff30",
-      }}>
-        <span style={{ fontSize: 9, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 1 }}>Nivå</span>
-        <span style={{ fontSize: 22, fontWeight: 800, color: "var(--cyan)" }}>{level}</span>
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 11, color: "var(--text)", fontWeight: 600 }}>★ {xp} XP</span>
-          <span style={{ fontSize: 10, color: "var(--text-dim)" }}>{intoLevel}/{needed} till nivå {level + 1}</span>
-        </div>
-        <div className="glow-bar-track">
-          <div className="glow-bar-fill" style={{
-            width: `${pct}%`,
-            background: "linear-gradient(90deg, var(--cyan), var(--purple))",
-            boxShadow: "0 0 12px #00e5ff50",
-          }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-- [ ] **Step 2: Render it in `DashboardPage.tsx`**
-
-(a) Add the import after `import QuickActions from "./QuickActions";`:
-```typescript
-import XpCard from "./XpCard";
-```
-
-(b) Insert the card between the stats row and the Score+Domains row. Find:
-```tsx
-          ))}
-        </div>
-
-        {/* Score + Domains row */}
-```
-and replace with:
-```tsx
-          ))}
-        </div>
-
-        {/* XP / level */}
-        <div style={{ marginBottom: 14 }}>
-          <XpCard xp={p.xp ?? 0} />
-        </div>
-
-        {/* Score + Domains row */}
-```
-
-- [ ] **Step 3: Typecheck**
-
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
-
-- [ ] **Step 4: Commit**
-
-```bash
-cd ccna-app && git add components/dashboard/XpCard.tsx components/dashboard/DashboardPage.tsx && git commit -m "feat(xp): dashboard level + XP progress card"
-```
-
----
-
-## Task 4: Quiz UX — no auto-advance, manual Nästa
-
-**Files:**
-- Modify: `components/quiz/QuizCard.tsx`
-- Modify: `components/quiz/QuizPage.tsx`
-
-- [ ] **Step 1: `QuizCard` — add `isLast` prop**
-
-In `components/quiz/QuizCard.tsx`, change:
-```typescript
-interface Props {
-  question: Question;
-  selectedAnswer: number | null;
-  onAnswer: (idx: number) => void;
-}
-```
-to:
-```typescript
-interface Props {
-  question: Question;
-  selectedAnswer: number | null;
-  onAnswer: (idx: number) => void;
-  isLast: boolean;
-}
-```
-and the signature:
-```typescript
-export default function QuizCard({ question, selectedAnswer, onAnswer }: Props) {
-```
-to:
-```typescript
-export default function QuizCard({ question, onAnswer, isLast }: Props) {
-```
-(`selectedAnswer` is unused after this change — removing it from the destructure avoids an unused-var lint.)
-
-- [ ] **Step 2: `QuizCard` — remove auto-advance, add `handleNext`**
-
-Replace:
-```typescript
-  function handlePick(idx: number) {
-    if (revealed) return;
-    setChosen(idx);
-    setRevealed(true);
-    setTimeout(() => onAnswer(idx), 700);
-  }
-```
-with:
-```typescript
-  function handlePick(idx: number) {
-    if (revealed) return;
-    setChosen(idx);
-    setRevealed(true);
-  }
-
-  function handleNext() {
-    if (chosen === null) return;
-    onAnswer(chosen);
-  }
-```
-
-- [ ] **Step 3: `QuizCard` — keyboard: A–D to pick, Enter/Space to continue**
-
-Replace:
-```typescript
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const idx = KEYS.indexOf(e.key.toLowerCase());
-      if (idx >= 0 && idx < question.options.length && !revealed) {
-        handlePick(idx);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [question, revealed]);
-```
-with:
-```typescript
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (!revealed) {
-        const idx = KEYS.indexOf(e.key.toLowerCase());
-        if (idx >= 0 && idx < question.options.length) handlePick(idx);
-      } else if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        handleNext();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [question, revealed, chosen]);
-```
-
-- [ ] **Step 4: `QuizCard` — add the Nästa button after the explanation**
-
-Find the closing of the explanation block followed by the keyframes style:
-```tsx
-        </div>
-      )}
-
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-```
-Replace with:
-```tsx
-        </div>
-      )}
-
-      {revealed && (
-        <button onClick={handleNext} className="nf-btn-primary"
-          style={{ marginTop: 14, width: "100%", padding: "12px", fontSize: 12 }}>
-          {isLast ? "Se resultat →" : "Nästa fråga →"}  <span style={{ opacity: 0.6, fontSize: 10 }}>(Enter)</span>
-        </button>
-      )}
-
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-```
-
-- [ ] **Step 5: `QuizPage` — pass `isLast`, drop the 800ms delay**
-
-In `components/quiz/QuizPage.tsx`, replace the `handleAnswer` function:
-```typescript
-  function handleAnswer(idx: number) {
-    if (!quiz) return;
-    const updated = [...quiz.answers];
-    updated[quiz.current] = idx;
-    if (quiz.current + 1 >= quiz.questions.length) {
-      // Last question answered — wait for next tick then go to results
-      setQuiz({ ...quiz, answers: updated });
-      setTimeout(() => {
-        const correct = updated.filter((a, i) => a === quiz.questions[i].correct).length;
-        const dom = quiz.questions[0].domain;
-        recordQuizResult(dom, correct, quiz.questions.length);
-        setPhase("results");
-      }, 800);
-    } else {
-      setQuiz({ ...quiz, answers: updated, current: quiz.current + 1 });
-    }
-  }
-```
-with:
-```typescript
-  function handleAnswer(idx: number) {
-    if (!quiz) return;
-    const updated = [...quiz.answers];
-    updated[quiz.current] = idx;
-    if (quiz.current + 1 >= quiz.questions.length) {
-      const correct = updated.filter((a, i) => a === quiz.questions[i].correct).length;
-      recordQuizResult(quiz.questions[0].domain, correct, quiz.questions.length);
-      setQuiz({ ...quiz, answers: updated });
-      setPhase("results");
-    } else {
-      setQuiz({ ...quiz, answers: updated, current: quiz.current + 1 });
-    }
-  }
-```
-
-- [ ] **Step 6: `QuizPage` — pass `isLast` to `QuizCard`**
-
-Replace:
-```tsx
-        <QuizCard
-          question={quiz.questions[quiz.current]}
-          selectedAnswer={quiz.answers[quiz.current]}
-          onAnswer={handleAnswer}
-        />
-```
-with:
-```tsx
-        <QuizCard
-          question={quiz.questions[quiz.current]}
-          selectedAnswer={quiz.answers[quiz.current]}
-          onAnswer={handleAnswer}
-          isLast={quiz.current + 1 >= quiz.questions.length}
-        />
-```
-
-- [ ] **Step 7: Typecheck + runtime**
-
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
-Then (dev server running) `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/quiz` → `200`.
-
-- [ ] **Step 8: Manual check**
-
-Open `/quiz`, start a quiz. Pick an answer → colors + explanation appear and **stay** (no jump). A "Nästa fråga →" button shows; Enter advances. Last question button says "Se resultat →".
-
-- [ ] **Step 9: Commit**
-
-```bash
-cd ccna-app && git add components/quiz/QuizCard.tsx components/quiz/QuizPage.tsx && git commit -m "feat(quiz): manual Nästa step, keep explanation, no auto-advance"
-```
-
----
-
-## Task 5: Quiz attempt history (IndexedDB)
-
-**Files:**
-- Modify: `lib/types.ts`
-- Create: `lib/quizdb.ts`
-- Modify: `lib/questions.ts`
-- Modify: `components/quiz/QuizPage.tsx`
-
-- [ ] **Step 1: Add `QuizAttempt` to `lib/types.ts`**
-
-Append at the end of `lib/types.ts`:
-```typescript
 export interface QuizAttempt {
-  id: string;                 // crypto.randomUUID()
-  date: string;               // ISO
+  id: string;
+  date: string;
   domain: Domain | "all";
   difficulty: Difficulty | "all";
   total: number;
@@ -536,18 +173,137 @@ export interface QuizAttempt {
 }
 ```
 
-- [ ] **Step 2: Write `lib/quizdb.ts`**
+- [ ] **Steg 2: Typkontroll**
+
+```
+cd ccna-app && npx tsc --noEmit
+```
+
+Förväntat: ett fel om `xp` saknas i `defaultProgress()` i `lib/progress.ts` — fixas i Task 3.
+
+- [ ] **Steg 3: Commit**
+
+```
+git add ccna-app/lib/types.ts
+git commit -m "feat: add xp to AppProgress and QuizAttempt type"
+```
+
+---
+
+## Task 3: XP i progress (`lib/progress.ts`)
+
+**Files:**
+- Modify: `ccna-app/lib/progress.ts`
+
+Nuläge: `defaultProgress()` returnerar objekt utan `xp`; `recordQuizResult` delar inte ut XP.
+
+- [ ] **Steg 1: Uppdatera `lib/progress.ts`**
+
+Lägg `import { XP } from "./xp";` på rad 2 (efter `"use client";`).
+
+Ersätt `defaultProgress()`:
 
 ```typescript
-"use client";
+function defaultProgress(): AppProgress {
+  return {
+    domains: {},
+    activities: [],
+    streak: 0,
+    lastActiveDate: "",
+    studyTimeSeconds: 0,
+    xp: 0,
+  };
+}
+```
+
+I `recordQuizResult`, lägg dessa rader direkt efter `p.activities = [act, ...p.activities].slice(0, 20);`:
+
+```typescript
+  const earned = correct * XP.correctAnswer + XP.quizComplete;
+  p.xp = (p.xp ?? 0) + earned;
+```
+
+Lägg ny funktion efter `addStudyTime`:
+
+```typescript
+export function addXp(amount: number): void {
+  const p = getProgress();
+  p.xp = (p.xp ?? 0) + amount;
+  saveProgress(p);
+}
+```
+
+- [ ] **Steg 2: Typkontroll**
+
+```
+cd ccna-app && npx tsc --noEmit
+```
+
+Förväntat: ingen utdata
+
+- [ ] **Steg 3: Commit**
+
+```
+git add ccna-app/lib/progress.ts
+git commit -m "feat: add addXp() and award XP in recordQuizResult"
+```
+
+---
+
+## Task 4: Fråguppslagning (`lib/questions.ts`)
+
+**Files:**
+- Modify: `ccna-app/lib/questions.ts`
+
+- [ ] **Steg 1: Lägg `getQuestionsByIds` sist i `lib/questions.ts`**
+
+```typescript
+export function getQuestionsByIds(ids: string[]): Question[] {
+  const idSet = new Set(ids);
+  return allQuestions.filter((q) => idSet.has(q.id));
+}
+```
+
+- [ ] **Steg 2: Typkontroll**
+
+```
+cd ccna-app && npx tsc --noEmit
+```
+
+Förväntat: ingen utdata
+
+- [ ] **Steg 3: Commit**
+
+```
+git add ccna-app/lib/questions.ts
+git commit -m "feat: add getQuestionsByIds to lib/questions.ts"
+```
+
+---
+
+## Task 5: IndexedDB-wrapper (`lib/quizdb.ts`)
+
+**Files:**
+- Create: `ccna-app/lib/quizdb.ts`
+
+IndexedDB är asynkron och callback-baserad. DB-namn: `netforge`, object store: `attempts`, keyPath: `id`, index på `date`.
+
+- [ ] **Steg 1: Skapa `lib/quizdb.ts`**
+
+```typescript
 import type { QuizAttempt } from "./types";
 
 const DB_NAME = "netforge";
 const STORE = "attempts";
+const VERSION = 1;
 
-function open(): Promise<IDBDatabase> {
+function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("IndexedDB not available"));
+      return;
+    }
+    const req = indexedDB.open(DB_NAME, VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) {
@@ -560,40 +316,46 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-export async function saveAttempt(a: QuizAttempt): Promise<void> {
+export async function saveAttempt(attempt: QuizAttempt): Promise<void> {
   if (typeof indexedDB === "undefined") return;
-  const db = await open();
-  await new Promise<void>((resolve, reject) => {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).put(a);
+    tx.objectStore(STORE).put(attempt);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
-  db.close();
 }
 
 export async function getAttempts(limit = 50): Promise<QuizAttempt[]> {
   if (typeof indexedDB === "undefined") return [];
-  const db = await open();
-  const all = await new Promise<QuizAttempt[]>((resolve, reject) => {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = () => resolve(req.result as QuizAttempt[]);
+    const req = tx.objectStore(STORE).index("date").openCursor(null, "prev");
+    const results: QuizAttempt[] = [];
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (cursor && results.length < limit) {
+        results.push(cursor.value as QuizAttempt);
+        cursor.continue();
+      } else {
+        resolve(results);
+      }
+    };
     req.onerror = () => reject(req.error);
   });
-  db.close();
-  return all.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit);
 }
 
-// Unika fråge-id som svarats fel på, senaste först.
 export async function getWrongQuestionIds(limit = 30): Promise<string[]> {
   const attempts = await getAttempts(100);
+  const seen = new Set<string>();
   const ids: string[] = [];
-  for (const a of attempts) {
-    for (const r of a.results) {
-      if (!r.correct && !ids.includes(r.questionId)) {
+  for (const attempt of attempts) {
+    for (const r of attempt.results) {
+      if (!r.correct && !seen.has(r.questionId) && ids.length < limit) {
+        seen.add(r.questionId);
         ids.push(r.questionId);
-        if (ids.length >= limit) return ids;
       }
     }
   }
@@ -601,448 +363,879 @@ export async function getWrongQuestionIds(limit = 30): Promise<string[]> {
 }
 ```
 
-- [ ] **Step 3: `getQuestionsByIds` in `lib/questions.ts`**
+- [ ] **Steg 2: Typkontroll**
 
-Append at the end of `lib/questions.ts`:
+```
+cd ccna-app && npx tsc --noEmit
+```
+
+Förväntat: ingen utdata
+
+- [ ] **Steg 3: Commit**
+
+```
+git add ccna-app/lib/quizdb.ts
+git commit -m "feat: add IndexedDB wrapper for quiz attempts (lib/quizdb.ts)"
+```
+
+---
+
+## Task 6: QuizCard — ta bort auto-hopp, lägg Nästa-knapp
+
+**Files:**
+- Modify: `ccna-app/components/quiz/QuizCard.tsx`
+
+Nuläge: `handlePick` anropar `setTimeout(() => onAnswer(idx), 700)`. Ny prop `isLast: boolean` styr knapptext. `onAnswer` anropas inte förrän användaren klickar Nästa.
+
+- [ ] **Steg 1: Ersätt hela `QuizCard.tsx`**
+
 ```typescript
-export function getQuestionsByIds(ids: string[]): Question[] {
-  const byId = new Map(allQuestions.map((q) => [q.id, q]));
-  return ids
-    .map((id) => byId.get(id))
-    .filter((q): q is Question => q !== undefined);
+"use client";
+import { useEffect, useState } from "react";
+import type { Question } from "@/lib/types";
+
+interface Props {
+  question: Question;
+  selectedAnswer: number | null;
+  onAnswer: (idx: number) => void;
+  isLast: boolean;
+}
+
+const KEYS = ["a", "b", "c", "d"];
+const LABELS = ["A", "B", "C", "D"];
+
+export default function QuizCard({ question, selectedAnswer, onAnswer, isLast }: Props) {
+  const [revealed, setRevealed] = useState(false);
+  const [chosen, setChosen] = useState<number | null>(null);
+
+  useEffect(() => {
+    setRevealed(false);
+    setChosen(null);
+  }, [question.id]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (revealed) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (chosen !== null) onAnswer(chosen);
+        }
+        return;
+      }
+      const idx = KEYS.indexOf(e.key.toLowerCase());
+      if (idx >= 0 && idx < question.options.length) {
+        handlePick(idx);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [question, revealed, chosen]);
+
+  function handlePick(idx: number) {
+    if (revealed) return;
+    setChosen(idx);
+    setRevealed(true);
+  }
+
+  function handleNext() {
+    if (chosen !== null) onAnswer(chosen);
+  }
+
+  function getOptionClass(idx: number): string {
+    if (!revealed) return chosen === idx ? "answer-selected" : "";
+    if (idx === question.correct) return "answer-correct";
+    if (idx === chosen && idx !== question.correct) return "answer-wrong";
+    return "";
+  }
+
+  const diffColor =
+    question.difficulty === "easy"
+      ? "var(--green)"
+      : question.difficulty === "hard"
+      ? "var(--red)"
+      : "var(--cyan)";
+
+  return (
+    <div style={{ maxWidth: 700, margin: "0 auto" }}>
+      <div className="nf-card" style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <span style={{
+            fontSize: 9, padding: "3px 8px", borderRadius: 4,
+            textTransform: "uppercase", letterSpacing: 1,
+            background: `${diffColor}15`, color: diffColor, border: `1px solid ${diffColor}30`,
+          }}>{question.difficulty}</span>
+          <span style={{ fontSize: 9, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 1 }}>
+            {question.domain.replace(/-/g, " ")}
+          </span>
+          <span style={{ fontSize: 9, color: "var(--muted)", marginLeft: "auto" }}>
+            {revealed ? "Enter / Space → nästa" : "Tangentbord: A B C D"}
+          </span>
+        </div>
+        <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, fontWeight: 500 }}>
+          {question.question}
+        </p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+        {question.options.map((opt, idx) => (
+          <button
+            key={idx}
+            onClick={() => handlePick(idx)}
+            className={getOptionClass(idx)}
+            style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "14px 18px",
+              background: "var(--bg-surface)", border: "1px solid var(--border)",
+              borderRadius: 8, cursor: revealed ? "default" : "pointer",
+              textAlign: "left", fontSize: 12.5, color: "var(--text)",
+              fontFamily: "'JetBrains Mono', monospace",
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{
+              width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 11, fontWeight: 700,
+              background: "var(--bg-elevated)", border: "1px solid var(--border)",
+              color: "var(--text-dim)",
+            }}>{LABELS[idx]}</span>
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      {revealed && (
+        <div style={{
+          padding: "14px 16px", borderRadius: 8,
+          background: chosen === question.correct ? "#00e67608" : "#ff4c6a08",
+          border: `1px solid ${chosen === question.correct ? "#00e67620" : "#ff4c6a20"}`,
+          animation: "fadeIn 0.3s ease-out",
+        }}>
+          <div style={{
+            fontSize: 10, fontWeight: 600, marginBottom: 6,
+            color: chosen === question.correct ? "var(--green)" : "var(--red)",
+          }}>
+            {chosen === question.correct ? "✓ Rätt!" : "✗ Fel"} — Förklaring
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.7, marginBottom: 14 }}>
+            {question.explanation}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleNext}
+              className="nf-btn-primary"
+              style={{ fontSize: 11, padding: "8px 20px" }}
+            >
+              {isLast ? "Se resultat →" : "Nästa fråga →"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+    </div>
+  );
 }
 ```
 
-- [ ] **Step 4: `QuizPage` — record domain/difficulty + save attempt**
+- [ ] **Steg 2: Typkontroll**
 
-(a) Imports — replace:
-```typescript
-import { getQuestions } from "@/lib/questions";
-import { recordQuizResult } from "@/lib/progress";
-import { DOMAINS } from "@/lib/types";
-import type { Question, Domain, Difficulty } from "@/lib/types";
 ```
-with:
+cd ccna-app && npx tsc --noEmit
+```
+
+Förväntat: fel om `isLast`-prop saknas i `QuizPage.tsx` — fixas i Task 7.
+
+- [ ] **Steg 3: Commit**
+
+```
+git add ccna-app/components/quiz/QuizCard.tsx
+git commit -m "feat: quiz card stays on answer, adds Nästa-knapp and Enter/Space nav"
+```
+
+---
+
+## Task 7: QuizPage — ta bort setTimeout, spara QuizAttempt, repetera-läge
+
+**Files:**
+- Modify: `ccna-app/components/quiz/QuizPage.tsx`
+
+Nuläge: `handleAnswer` har `setTimeout` 800 ms vid sista frågan. `QuizCard` får ny `isLast`-prop. Ingen `QuizAttempt` sparas. `onRepeatWrong` skickas ned till `QuizConfig` och `QuizResults`.
+
+- [ ] **Steg 1: Ersätt hela `QuizPage.tsx`**
+
 ```typescript
-import { getQuestions } from "@/lib/questions";
+"use client";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import QuizConfig from "./QuizConfig";
+import QuizCard from "./QuizCard";
+import QuizResults from "./QuizResults";
+import { getQuestions, getQuestionsByIds } from "@/lib/questions";
 import { recordQuizResult } from "@/lib/progress";
-import { saveAttempt } from "@/lib/quizdb";
+import { saveAttempt, getWrongQuestionIds } from "@/lib/quizdb";
 import { DOMAINS } from "@/lib/types";
 import type { Question, Domain, Difficulty, QuizAttempt } from "@/lib/types";
-```
 
-(b) Extend `QuizState` — replace:
-```typescript
+type Phase = "config" | "quiz" | "results";
+
 interface QuizState {
   questions: Question[];
   current: number;
   answers: (number | null)[];
   startTime: number;
 }
-```
-with:
-```typescript
-interface QuizState {
-  questions: Question[];
-  current: number;
-  answers: (number | null)[];
-  startTime: number;
-  domain: Domain | "all";
-  difficulty: Difficulty | "all";
-}
-```
 
-(c) `startQuiz` — record domain/difficulty. Replace:
-```typescript
-  function startQuiz(domain: Domain | "all", count: number, difficulty: Difficulty | "all") {
-    const qs = getQuestions({ domain, count, difficulty });
+function QuizPageInner() {
+  const params = useSearchParams();
+  const domainParam = params.get("domain");
+  const initialDomain: Domain | "all" =
+    domainParam && DOMAINS.some((d) => d.id === domainParam)
+      ? (domainParam as Domain)
+      : "all";
+
+  const [phase, setPhase] = useState<Phase>("config");
+  const [quiz, setQuiz] = useState<QuizState | null>(null);
+  const [configDomain, setConfigDomain] = useState<Domain | "all">(initialDomain);
+  const [configDifficulty, setConfigDifficulty] = useState<Difficulty | "all">("all");
+
+  function startQuiz(
+    domain: Domain | "all",
+    count: number,
+    difficulty: Difficulty | "all",
+    fromWrongIds?: string[]
+  ) {
+    let qs: Question[];
+    if (fromWrongIds && fromWrongIds.length > 0) {
+      qs = getQuestionsByIds(fromWrongIds).slice(0, count);
+    } else {
+      qs = getQuestions({ domain, count, difficulty });
+    }
     if (!qs.length) return;
-    setQuiz({ questions: qs, current: 0, answers: new Array(qs.length).fill(null), startTime: Date.now() });
+    setConfigDomain(domain);
+    setConfigDifficulty(difficulty);
+    setQuiz({
+      questions: qs,
+      current: 0,
+      answers: new Array(qs.length).fill(null),
+      startTime: Date.now(),
+    });
     setPhase("quiz");
   }
-```
-with:
-```typescript
-  function startQuiz(domain: Domain | "all", count: number, difficulty: Difficulty | "all") {
-    const qs = getQuestions({ domain, count, difficulty });
-    if (!qs.length) return;
-    setQuiz({ questions: qs, current: 0, answers: new Array(qs.length).fill(null), startTime: Date.now(), domain, difficulty });
-    setPhase("quiz");
-  }
-```
 
-(d) Save the attempt at quiz end. In `handleAnswer` (the version from Task 4), inside the `if (quiz.current + 1 >= quiz.questions.length)` branch, immediately AFTER the `recordQuizResult(...)` line, add:
-```typescript
+  async function startRepeatWrong(count: number) {
+    const ids = await getWrongQuestionIds(count);
+    if (!ids.length) return;
+    startQuiz("all", count, "all", ids);
+  }
+
+  function handleAnswer(idx: number) {
+    if (!quiz) return;
+    const updated = [...quiz.answers];
+    updated[quiz.current] = idx;
+    if (quiz.current + 1 >= quiz.questions.length) {
+      const finalQuiz = { ...quiz, answers: updated };
+      setQuiz(finalQuiz);
+      const correct = updated.filter((a, i) => a === finalQuiz.questions[i].correct).length;
+      const dom = finalQuiz.questions[0].domain;
+      recordQuizResult(dom, correct, finalQuiz.questions.length);
+
       const attempt: QuizAttempt = {
         id: crypto.randomUUID(),
         date: new Date().toISOString(),
-        domain: quiz.domain,
-        difficulty: quiz.difficulty,
-        total: quiz.questions.length,
+        domain: configDomain,
+        difficulty: configDifficulty,
+        total: finalQuiz.questions.length,
         correct,
-        results: quiz.questions.map((q, i) => ({
+        results: finalQuiz.questions.map((q, i) => ({
           questionId: q.id,
           chosen: updated[i],
           correct: updated[i] === q.correct,
         })),
       };
-      void saveAttempt(attempt);
+      saveAttempt(attempt);
+      setPhase("results");
+    } else {
+      setQuiz({ ...quiz, answers: updated, current: quiz.current + 1 });
+    }
+  }
+
+  function restart() {
+    setQuiz(null);
+    setPhase("config");
+  }
+
+  if (phase === "config") {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: 22 }}>
+        <header style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text)" }}>Quiz / Prov</span>
+          <span style={{ width: 1, height: 16, background: "var(--border)" }} />
+          <span style={{ fontSize: 11, color: "var(--text-dim)" }}>CCNA 200-301</span>
+        </header>
+        <QuizConfig
+          onStart={startQuiz}
+          onRepeatWrong={startRepeatWrong}
+          initialDomain={initialDomain}
+        />
+      </div>
+    );
+  }
+
+  if (phase === "quiz" && quiz) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: 22 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text)" }}>Quiz</span>
+            <span style={{ fontSize: 11, color: "var(--text-dim)" }}>
+              {quiz.current + 1} / {quiz.questions.length}
+            </span>
+          </div>
+          <button onClick={restart} className="nf-btn-secondary" style={{ fontSize: 10 }}>Avbryt</button>
+        </div>
+        <div className="glow-bar-track" style={{ marginBottom: 24, height: 3 }}>
+          <div className="glow-bar-fill" style={{
+            width: `${(quiz.current / quiz.questions.length) * 100}%`,
+            background: "linear-gradient(90deg, var(--cyan), var(--purple))",
+            boxShadow: "0 0 8px #00e5ff40",
+          }} />
+        </div>
+        <QuizCard
+          question={quiz.questions[quiz.current]}
+          selectedAnswer={quiz.answers[quiz.current]}
+          onAnswer={handleAnswer}
+          isLast={quiz.current + 1 === quiz.questions.length}
+        />
+      </div>
+    );
+  }
+
+  if (phase === "results" && quiz) {
+    const correct = quiz.answers.filter((a, i) => a === quiz.questions[i].correct).length;
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg-base)", padding: 22 }}>
+        <QuizResults
+          questions={quiz.questions}
+          answers={quiz.answers}
+          correct={correct}
+          elapsed={Math.round((Date.now() - quiz.startTime) / 1000)}
+          onRestart={restart}
+          onRepeatWrong={startRepeatWrong}
+        />
+      </div>
+    );
+  }
+
+  return null;
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense fallback={null}>
+      <QuizPageInner />
+    </Suspense>
+  );
+}
 ```
 
-- [ ] **Step 5: Typecheck**
+- [ ] **Steg 2: Typkontroll**
 
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
+```
+cd ccna-app && npx tsc --noEmit
+```
 
-- [ ] **Step 6: Manual check**
+Förväntat: fel om `onRepeatWrong` saknas i `QuizConfig` och `QuizResults` — fixas i Task 8 och 9.
 
-Finish a quiz. In DevTools → Application → IndexedDB → `netforge` → `attempts`, confirm a record exists with `results[]`.
+- [ ] **Steg 3: Commit**
 
-- [ ] **Step 7: Commit**
-
-```bash
-cd ccna-app && git add lib/types.ts lib/quizdb.ts lib/questions.ts components/quiz/QuizPage.tsx && git commit -m "feat(quiz): save attempts to IndexedDB + getQuestionsByIds"
+```
+git add ccna-app/components/quiz/QuizPage.tsx
+git commit -m "feat: save QuizAttempt to IndexedDB, remove setTimeout, add repeat-wrong mode"
 ```
 
 ---
 
-## Task 6: Results resources + "repetera felsvar"
+## Task 8: QuizConfig — lägg "Repetera felsvar"-val
 
 **Files:**
-- Modify: `components/quiz/QuizResults.tsx`
-- Modify: `components/quiz/QuizConfig.tsx`
-- Modify: `components/quiz/QuizPage.tsx`
+- Modify: `ccna-app/components/quiz/QuizConfig.tsx`
 
-- [ ] **Step 1: `QuizResults` — props + resources import**
+Ny prop `onRepeatWrong: (count: number) => void`.
 
-In `components/quiz/QuizResults.tsx`:
+- [ ] **Steg 1: Ersätt hela `QuizConfig.tsx`**
 
-(a) Add the resources import after the existing imports:
 ```typescript
-import { resources } from "@/data/resources";
+"use client";
+import { useState } from "react";
+import { DOMAINS } from "@/lib/types";
+import type { Domain, Difficulty } from "@/lib/types";
+
+interface Props {
+  onStart: (domain: Domain | "all", count: number, difficulty: Difficulty | "all") => void;
+  onRepeatWrong: (count: number) => void;
+  initialDomain?: Domain | "all";
+}
+
+const COUNT_OPTIONS = [10, 25, 50];
+const DIFFICULTY_OPTIONS: { value: Difficulty | "all"; label: string }[] = [
+  { value: "all", label: "Alla nivåer" },
+  { value: "easy", label: "Lätt" },
+  { value: "normal", label: "Normal" },
+  { value: "hard", label: "Svår" },
+];
+
+export default function QuizConfig({ onStart, onRepeatWrong, initialDomain = "all" }: Props) {
+  const [domain, setDomain] = useState<Domain | "all">(initialDomain);
+  const [count, setCount] = useState(10);
+  const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
+
+  const selectStyle = (active: boolean, accent = "var(--cyan)"): React.CSSProperties => ({
+    padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontSize: 11,
+    fontWeight: active ? 600 : 400,
+    background: active ? `${accent}15` : "var(--bg-elevated)",
+    border: `1px solid ${active ? accent : "var(--border)"}`,
+    color: active ? accent : "var(--text-dim)",
+    transition: "all 0.15s",
+    fontFamily: "'JetBrains Mono', monospace",
+  });
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      <div className="nf-card" style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 16 }}>
+          Välj domän
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <button style={selectStyle(domain === "all")} onClick={() => setDomain("all")}>Alla domäner</button>
+          {DOMAINS.map((d) => (
+            <button key={d.id} style={selectStyle(domain === d.id)} onClick={() => setDomain(d.id)}>
+              {d.label} <span style={{ opacity: 0.5, fontSize: 10 }}>{d.weight}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        <div className="nf-card">
+          <div style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>
+            Antal frågor
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {COUNT_OPTIONS.map((n) => (
+              <button key={n} style={selectStyle(count === n)} onClick={() => setCount(n)}>{n}</button>
+            ))}
+          </div>
+        </div>
+        <div className="nf-card">
+          <div style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>
+            Svårighetsgrad
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {DIFFICULTY_OPTIONS.map((d) => (
+              <button key={d.value} style={selectStyle(difficulty === d.value)} onClick={() => setDifficulty(d.value)}>
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="nf-card" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "linear-gradient(135deg, #00e5ff08, #7c4dff08)",
+          border: "1px solid #00e5ff20",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Klar att börja?</div>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4 }}>
+              {count} frågor · {domain === "all" ? "Alla domäner" : DOMAINS.find((d) => d.id === domain)?.label} ·{" "}
+              {difficulty === "all" ? "Alla nivåer" : DIFFICULTY_OPTIONS.find((d) => d.value === difficulty)?.label}
+            </div>
+          </div>
+          <button
+            className="nf-btn-primary"
+            style={{ padding: "10px 28px", fontSize: 12 }}
+            onClick={() => onStart(domain, count, difficulty)}
+          >
+            STARTA QUIZ ▶
+          </button>
+        </div>
+
+        <div className="nf-card" style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "#ff4c6a08", border: "1px solid #ff4c6a20",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Repetera felsvar</div>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 4 }}>
+              Bygg ett quiz av dina senaste felsvar
+            </div>
+          </div>
+          <button
+            className="nf-btn-secondary"
+            style={{ padding: "10px 22px", fontSize: 12, borderColor: "#ff4c6a40", color: "var(--red)" }}
+            onClick={() => onRepeatWrong(count)}
+          >
+            REPETERA ↺
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 ```
 
-(b) Add `onRepeat` to `Props`:
+- [ ] **Steg 2: Typkontroll**
+
+```
+cd ccna-app && npx tsc --noEmit
+```
+
+Förväntat: fel om `onRepeatWrong` saknas i `QuizResults` — fixas i Task 9.
+
+- [ ] **Steg 3: Commit**
+
+```
+git add ccna-app/components/quiz/QuizConfig.tsx
+git commit -m "feat: add repeat-wrong-answers option to QuizConfig"
+```
+
+---
+
+## Task 9: QuizResults — resurser per feldomän + repetera-knapp
+
+**Files:**
+- Modify: `ccna-app/components/quiz/QuizResults.tsx`
+
+Ny prop `onRepeatWrong: (count: number) => void`. Resurser importeras från `@/data/resources`.
+
+- [ ] **Steg 1: Ersätt hela `QuizResults.tsx`**
+
 ```typescript
+"use client";
+import Link from "next/link";
+import type { Question, Domain } from "@/lib/types";
+import { resources } from "@/data/resources";
+
 interface Props {
   questions: Question[];
   answers: (number | null)[];
   correct: number;
   elapsed: number;
   onRestart: () => void;
-  onRepeat?: () => void;
+  onRepeatWrong: (count: number) => void;
 }
-```
-and the signature:
-```typescript
-export default function QuizResults({ questions, answers, correct, elapsed, onRestart, onRepeat }: Props) {
-```
 
-- [ ] **Step 2: `QuizResults` — compute misses + render resources card**
+function formatTime(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
 
-Just AFTER the `const offset = circ * (1 - pct / 100);` line, add:
-```typescript
-  const missedDomains = [
-    ...new Set(questions.filter((q, i) => answers[i] !== q.correct).map((q) => q.domain)),
-  ];
-```
+export default function QuizResults({
+  questions, answers, correct, elapsed, onRestart, onRepeatWrong,
+}: Props) {
+  const total = questions.length;
+  const pct = Math.round((correct / total) * 100);
+  const color = pct >= 70 ? "var(--green)" : pct >= 50 ? "var(--cyan)" : "var(--red)";
+  const r = 54;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - pct / 100);
 
-Then, between the Score card's closing `</div>` and the `{/* Question review */}` block, insert:
-```tsx
-      {/* Learning resources for missed questions */}
-      {missedDomains.length > 0 && (
-        <div className="nf-card" style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <span style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 2 }}>
-              📚 Läranderesurser för dina felsvar
+  const wrongQuestions = questions.filter((q, i) => answers[i] !== q.correct);
+  const wrongDomains = [...new Set(wrongQuestions.map((q) => q.domain))] as Domain[];
+  const resourcesByDomain = wrongDomains.reduce<Record<string, typeof resources>>((acc, domain) => {
+    acc[domain] = resources.filter((r) => r.domain === domain);
+    return acc;
+  }, {});
+
+  return (
+    <div style={{ maxWidth: 680, margin: "0 auto" }}>
+      {/* Score card */}
+      <div className="nf-card" style={{ textAlign: "center", marginBottom: 16, padding: "32px 20px" }}>
+        <div style={{ position: "relative", width: 130, height: 130, margin: "0 auto 16px" }}>
+          <svg width={130} height={130} viewBox="0 0 130 130" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx={65} cy={65} r={r} fill="none" stroke="#2a406030" strokeWidth={9} />
+            <circle cx={65} cy={65} r={r} fill="none" stroke={color} strokeWidth={9}
+              strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+              style={{ filter: `drop-shadow(0 0 8px ${color}50)`, transition: "stroke-dashoffset 1s ease-out" }}
+            />
+          </svg>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 32, fontWeight: 700, color: "var(--text)" }}>
+              {pct}<span style={{ fontSize: 14, color: "var(--text-dim)" }}>%</span>
             </span>
-            {onRepeat && (
-              <button onClick={onRepeat} className="nf-btn-secondary" style={{ fontSize: 10 }}>
-                Repetera felsvar →
-              </button>
-            )}
           </div>
-          {missedDomains.map((d) => {
-            const vids = resources.filter((r) => r.domain === d);
-            return (
-              <div key={d} style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: "var(--cyan)", fontWeight: 600, marginBottom: 6 }}>
-                  {d.replace(/-/g, " ")}
-                </div>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color, marginBottom: 6 }}>
+          {pct >= 70 ? "Utmärkt!" : pct >= 50 ? "Godkänt" : "Fortsätt träna"}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-dim)" }}>
+          {correct} av {total} rätt · {formatTime(elapsed)}
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 20 }}>
+          <button onClick={onRestart} className="nf-btn-primary">Nytt quiz</button>
+          <Link href="/dashboard"><button className="nf-btn-secondary">Dashboard</button></Link>
+        </div>
+        {wrongQuestions.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <button
+              onClick={() => onRepeatWrong(wrongQuestions.length)}
+              className="nf-btn-secondary"
+              style={{ borderColor: "#ff4c6a40", color: "var(--red)", fontSize: 11 }}
+            >
+              Repetera felsvar ({wrongQuestions.length} frågor) ↺
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Learning resources */}
+      {wrongDomains.length > 0 && (
+        <div className="nf-card" style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>
+            📚 Lär dig mer — svaga domäner denna quiz
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 14 }}>
+            Svaga domäner: {wrongDomains.map((d) => d.replace(/-/g, " ")).join(", ")}
+          </div>
+          {wrongDomains.map((domain) => (
+            <div key={domain} style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--cyan)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                {domain.replace(/-/g, " ")}
+              </div>
+              {resourcesByDomain[domain]?.length ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {vids.map((v) => (
-                    <a key={v.id} href={v.videoUrl} target="_blank" rel="noopener noreferrer"
-                      style={{ fontSize: 10.5, color: "var(--text-dim)", textDecoration: "none", display: "flex", gap: 8 }}>
-                      <span style={{ color: "var(--purple)", flexShrink: 0 }}>▶</span>
-                      <span><span style={{ color: "var(--text)" }}>{v.topic}</span> — {v.description}</span>
+                  {resourcesByDomain[domain].map((res) => (
+                    <a
+                      key={res.id}
+                      href={res.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "10px 12px", borderRadius: 6,
+                        background: "var(--bg-elevated)", border: "1px solid var(--border)",
+                        textDecoration: "none", color: "var(--text)", fontSize: 11.5,
+                      }}
+                    >
+                      <span style={{ color: "var(--red)", fontSize: 14 }}>▶</span>
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{res.topic}</div>
+                        <div style={{ fontSize: 10, color: "var(--text-dim)", marginTop: 2 }}>{res.description}</div>
+                      </div>
                     </a>
                   ))}
-                  {vids.length === 0 && (
-                    <span style={{ fontSize: 10, color: "var(--muted)" }}>Inga videor för denna domän ännu.</span>
-                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: 11, color: "var(--text-dim)" }}>Inga resurser hittades.</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Question review */}
+      <div className="nf-card">
+        <div style={{ fontSize: 10, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 14 }}>
+          Genomgång av svar
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {questions.map((q, i) => {
+            const ans = answers[i];
+            const ok = ans === q.correct;
+            return (
+              <div key={q.id} style={{
+                padding: "12px 14px",
+                background: ok ? "#00e67608" : "#ff4c6a08",
+                border: `1px solid ${ok ? "#00e67620" : "#ff4c6a20"}`,
+                borderRadius: 6,
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: 12, color: ok ? "var(--green)" : "var(--red)", flexShrink: 0, marginTop: 1 }}>
+                    {ok ? "✓" : "✗"}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 11.5, color: "var(--text)", marginBottom: 4 }}>{q.question}</div>
+                    {!ok && (
+                      <div style={{ fontSize: 10, color: "var(--text-dim)" }}>
+                        Ditt svar: <span style={{ color: "var(--red)" }}>{ans !== null ? q.options[ans] : "—"}</span>
+                        {" · "}
+                        Rätt: <span style={{ color: "var(--green)" }}>{q.options[q.correct]}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-      )}
-```
-
-- [ ] **Step 3: `QuizConfig` — optional "Repetera felsvar" button**
-
-In `components/quiz/QuizConfig.tsx`:
-
-(a) Props + signature — replace:
-```typescript
-interface Props {
-  onStart: (domain: Domain | "all", count: number, difficulty: Difficulty | "all") => void;
-  initialDomain?: Domain | "all";
+      </div>
+    </div>
+  );
 }
 ```
-with:
-```typescript
-interface Props {
-  onStart: (domain: Domain | "all", count: number, difficulty: Difficulty | "all") => void;
-  initialDomain?: Domain | "all";
-  onStartRepeat?: () => void;
-}
+
+- [ ] **Steg 2: Typkontroll**
+
 ```
-and:
-```typescript
-export default function QuizConfig({ onStart, initialDomain = "all" }: Props) {
-```
-with:
-```typescript
-export default function QuizConfig({ onStart, initialDomain = "all", onStartRepeat }: Props) {
+cd ccna-app && npx tsc --noEmit
 ```
 
-(b) Add the button next to "STARTA QUIZ". Replace:
-```tsx
-        <button className="nf-btn-primary" style={{ padding: "10px 28px", fontSize: 12 }} onClick={() => onStart(domain, count, difficulty)}>
-          STARTA QUIZ ▶
-        </button>
+Förväntat: ingen utdata
+
+- [ ] **Steg 3: Commit**
+
 ```
-with:
+git add ccna-app/components/quiz/QuizResults.tsx
+git commit -m "feat: show learning resources and repeat-wrong button in QuizResults"
+```
+
+---
+
+## Task 10: Dashboard — XP/nivå-kort
+
+**Files:**
+- Modify: `ccna-app/components/dashboard/DashboardPage.tsx`
+
+- [ ] **Steg 1: Lägg import av `xpProgress` i `DashboardPage.tsx`**
+
+Lägg efter de befintliga importerna:
+
+```typescript
+import { xpProgress } from "@/lib/xp";
+```
+
+- [ ] **Steg 2: Lägg `xpData`-variabel**
+
+Lägg efter `const weakAreas = ...`:
+
+```typescript
+  const xpData = xpProgress(p.xp ?? 0);
+```
+
+- [ ] **Steg 3: Lägg XP-kortet i JSX**
+
+Infoga detta block direkt efter stängning av stats-raden `</div>` (efter de tre stats-korten) och *före* Score + Domains-raden:
+
 ```tsx
-        <div style={{ display: "flex", gap: 10 }}>
-          {onStartRepeat && (
-            <button className="nf-btn-secondary" style={{ padding: "10px 18px", fontSize: 11 }} onClick={onStartRepeat}>
-              Repetera felsvar
-            </button>
-          )}
-          <button className="nf-btn-primary" style={{ padding: "10px 28px", fontSize: 12 }} onClick={() => onStart(domain, count, difficulty)}>
-            STARTA QUIZ ▶
-          </button>
+        {/* XP & Nivå */}
+        <div className="nf-card" style={{ marginBottom: 14, padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+                ★ {p.xp ?? 0} XP
+              </span>
+              <span style={{
+                fontSize: 9, padding: "2px 8px", borderRadius: 10,
+                background: "#7c4dff20", border: "1px solid #7c4dff40", color: "var(--purple)",
+                fontWeight: 600, textTransform: "uppercase", letterSpacing: 1,
+              }}>
+                Nivå {xpData.level}
+              </span>
+            </div>
+            <span style={{ fontSize: 10, color: "var(--text-dim)" }}>
+              {xpData.intoLevel} / {xpData.needed} XP till nästa nivå
+            </span>
+          </div>
+          <div style={{ height: 4, borderRadius: 2, background: "var(--bg-elevated)", border: "1px solid var(--border)", overflow: "hidden" }}>
+            <div style={{
+              width: `${xpData.pct}%`,
+              height: "100%",
+              background: "linear-gradient(90deg, var(--purple), var(--cyan))",
+              boxShadow: "0 0 8px #7c4dff40",
+              transition: "width 0.8s ease-out",
+              borderRadius: 2,
+            }} />
+          </div>
         </div>
 ```
 
-- [ ] **Step 4: `QuizPage` — `startRepeat()` + wire props**
+- [ ] **Steg 4: Typkontroll**
 
-In `components/quiz/QuizPage.tsx`:
-
-(a) Imports — replace:
-```typescript
-import { getQuestions } from "@/lib/questions";
 ```
-with:
-```typescript
-import { getQuestions, getQuestionsByIds } from "@/lib/questions";
-```
-and replace:
-```typescript
-import { saveAttempt } from "@/lib/quizdb";
-```
-with:
-```typescript
-import { saveAttempt, getWrongQuestionIds } from "@/lib/quizdb";
+cd ccna-app && npx tsc --noEmit
 ```
 
-(b) Add `startRepeat` right after `startQuiz`:
-```typescript
-  async function startRepeat() {
-    const ids = await getWrongQuestionIds(20);
-    const qs = getQuestionsByIds(ids);
-    if (!qs.length) {
-      alert("Inga felsvar sparade än — gör ett quiz först!");
-      return;
-    }
-    setQuiz({ questions: qs, current: 0, answers: new Array(qs.length).fill(null), startTime: Date.now(), domain: "all", difficulty: "all" });
-    setPhase("quiz");
-  }
+Förväntat: ingen utdata
+
+- [ ] **Steg 5: Commit**
+
 ```
-
-(c) Pass to `QuizConfig` — replace:
-```tsx
-        <QuizConfig onStart={startQuiz} initialDomain={initialDomain} />
-```
-with:
-```tsx
-        <QuizConfig onStart={startQuiz} initialDomain={initialDomain} onStartRepeat={startRepeat} />
-```
-
-(d) Pass to `QuizResults` — replace:
-```tsx
-        <QuizResults
-          questions={quiz.questions}
-          answers={quiz.answers}
-          correct={correct}
-          elapsed={Math.round((Date.now() - quiz.startTime) / 1000)}
-          onRestart={restart}
-        />
-```
-with:
-```tsx
-        <QuizResults
-          questions={quiz.questions}
-          answers={quiz.answers}
-          correct={correct}
-          elapsed={Math.round((Date.now() - quiz.startTime) / 1000)}
-          onRestart={restart}
-          onRepeat={startRepeat}
-        />
-```
-
-- [ ] **Step 5: Typecheck + runtime**
-
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
-Then `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/quiz` → `200`.
-
-- [ ] **Step 6: Manual check**
-
-Finish a quiz with at least one wrong answer → results show a "📚 Läranderesurser"-card grouped by missed domain with video links + "Repetera felsvar →". The config screen also shows a "Repetera felsvar" button; clicking it (after a wrong answer exists) builds a quiz of previously-missed questions. With no history it alerts "Inga felsvar sparade än".
-
-- [ ] **Step 7: Commit**
-
-```bash
-cd ccna-app && git add components/quiz/QuizResults.tsx components/quiz/QuizConfig.tsx components/quiz/QuizPage.tsx && git commit -m "feat(quiz): post-quiz resources for misses + repetera-felsvar mode"
+git add ccna-app/components/dashboard/DashboardPage.tsx
+git commit -m "feat: add XP/level progress card to dashboard"
 ```
 
 ---
 
-## Task 7: XP from subnetting + topology labs
+## Task 11: Manuell verifiering
 
-**Files:**
-- Modify: `components/subnetting/SubnetTrainer.tsx`
-- Modify: `components/topology/TopologyPage.tsx`
+- [ ] **Steg 1: Starta dev-server**
 
-- [ ] **Step 1: Subnetting XP**
-
-In `components/subnetting/SubnetTrainer.tsx`:
-
-(a) Add imports after the existing `import type { SubnetResult } ...` line:
-```typescript
-import { addXp } from "@/lib/progress";
-import { XP } from "@/lib/xp";
+```
+cd ccna-app && npm run dev
 ```
 
-(b) In `check()`, immediately AFTER `setScore(s => ({ correct: s.correct + numCorrect, total: s.total + 4 }));`, add:
-```typescript
-    addXp(XP.subnettingRound);
+Öppna `http://localhost:3000/quiz`
+
+- [ ] **Steg 2: Verifiera Quiz-UX**
+
+1. Välj ett svar → färg + förklaring stannar kvar (inget auto-hopp)
+2. Knapp visar "Nästa fråga →" (eller "Se resultat →" på sista)
+3. Tryck Enter/Space → hoppar vidare
+4. Tryck A/B/C/D → väljer svar
+
+- [ ] **Steg 3: Verifiera XP och IndexedDB**
+
+1. Avsluta en quiz
+2. DevTools → Application → IndexedDB → netforge → attempts → kontrollera att ett försök finns
+3. Dashboard → XP-baren visas och värdet ökat
+
+- [ ] **Steg 4: Verifiera resurser i resultat**
+
+1. Svara fel på några frågor
+2. Resultatsidan visar rätt domäns videoresurser under "📚 Lär dig mer"
+3. "Repetera felsvar"-knappen startar ny quiz med de felsvarade frågorna
+
+- [ ] **Steg 5: Verifiera QuizConfig repetera**
+
+1. Gå till `/quiz`
+2. Klicka "REPETERA ↺" — om historik finns startar quiz
+
+- [ ] **Steg 6: Slutlig typkontroll**
+
+```
+cd ccna-app && npx tsc --noEmit
 ```
 
-- [ ] **Step 2: Topology-lab XP**
-
-In `components/topology/TopologyPage.tsx`:
-
-(a) Add imports after the existing topology imports near the top (after `import LabDocument from "./LabDocument";`):
-```typescript
-import { addXp } from "@/lib/progress";
-import { XP } from "@/lib/xp";
-```
-
-(b) Add a one-time award guard. Just after the line `const [view, setView]             = useState<'diagram' | 'lab'>('diagram')`, add:
-```typescript
-  const labAwarded = useRef(false)
-```
-(`useRef` is already imported in this file.)
-
-(c) Reset the guard on generate. In `generate`, change:
-```typescript
-  const generate = useCallback(() => {
-    setTopo(generateTopology(protocol, difficulty))
-    setDone([]); setSelected(null)
-  }, [protocol, difficulty])
-```
-to:
-```typescript
-  const generate = useCallback(() => {
-    setTopo(generateTopology(protocol, difficulty))
-    setDone([]); setSelected(null)
-    labAwarded.current = false
-  }, [protocol, difficulty])
-```
-
-(d) Award when all tasks complete. Replace:
-```typescript
-  const toggleTask = (i: number) => setDone(prev => {
-    const next = [...prev]; next[i] = !next[i]; return next
-  })
-```
-with:
-```typescript
-  const toggleTask = (i: number) => setDone(prev => {
-    const next = [...prev]; next[i] = !next[i]
-    const doneCount = next.filter(Boolean).length
-    if (doneCount === topo.tasks.length && topo.tasks.length > 0 && !labAwarded.current) {
-      labAwarded.current = true
-      addXp(XP.topologyLab)
-    }
-    return next
-  })
-```
-
-- [ ] **Step 3: Typecheck**
-
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
-
-- [ ] **Step 4: Manual check**
-
-Subnetting: answer a round → click Kontrollera → dashboard XP rises by 30.
-Topology: mark all tasks of one lab done → dashboard XP rises by 40 once (not again on re-toggle until "Generera ny").
-
-- [ ] **Step 5: Commit**
-
-```bash
-cd ccna-app && git add components/subnetting/SubnetTrainer.tsx components/topology/TopologyPage.tsx && git commit -m "feat(xp): award XP for subnetting rounds and completed topology labs"
-```
+Förväntat: ingen utdata
 
 ---
 
-## Task 8: Final verification
+## Specgranskning
 
-- [ ] **Step 1: Full typecheck**
-
-Run: `cd ccna-app && npx tsc --noEmit`
-Expected: no output.
-
-- [ ] **Step 2: Runtime smoke** (dev server running)
-
-```bash
-for u in /quiz /dashboard /subnetting /topologier; do \
-  printf "%s -> " "$u"; curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3000$u"; done
-```
-Expected: all `200`.
-
-- [ ] **Step 3: End-to-end walkthrough**
-
-1. `/quiz` → answer a question → explanation stays, Nästa works (Enter too), last says "Se resultat →".
-2. Finish with ≥1 wrong → results show 📚 resources per missed domain + "Repetera felsvar →".
-3. `/dashboard` → XP increased, level bar moved.
-4. DevTools → IndexedDB → `netforge/attempts` → attempt saved.
-5. Back on `/quiz` config → "Repetera felsvar" builds a quiz from missed questions.
-
-- [ ] **Step 4: Push**
-
-```bash
-cd ccna-app && git push origin master
-```
-
----
-
-## Self-review (by plan author)
-
-- **Spec coverage:** Part 1 quiz-UX → Task 4. Part 2 results resources + repeat → Task 6. Part 3 XP/levels → Tasks 1–3 (+ Task 7 for subnetting/topology sources). Part 4 history + repetera-felsvar → Tasks 5–6. ✅
-- **Placeholder scan:** none — every step has full code/commands.
-- **Type/name consistency:** `XP`, `levelFromXp`, `xpForLevel`, `xpProgress`/`XpProgress` consistent across `lib/xp.ts`, `XpCard`, Task 7. `QuizAttempt` shape identical in `lib/types.ts`, `lib/quizdb.ts`, and the `QuizPage` builder. `saveAttempt`/`getWrongQuestionIds`/`getQuestionsByIds` names match between definition and call sites. `onRepeat` (QuizResults) and `onStartRepeat` (QuizConfig) are distinct and wired to the same `startRepeat`. `isLast` prop added in QuizCard and passed in QuizPage. ✅
+| Krav | Task |
+|---|---|
+| Ta bort `setTimeout(onAnswer, 700)` i QuizCard | Task 6 |
+| Nästa-knapp under förklaring | Task 6 |
+| "Se resultat →" på sista frågan | Task 6 |
+| Enter/Space fortsätter efter avslöjande | Task 6 |
+| A–D väljer svar före avslöjande | Task 6 |
+| `QuizCard` anropar inte `onAnswer` förrän Nästa klickas | Task 6 |
+| Resurser per feldomän i QuizResults | Task 9 |
+| Gruppera per domän (ingen videodublett) | Task 9 |
+| "Repetera felsvar →"-knapp i resultat | Task 9 |
+| `xp: number` i `AppProgress` | Task 2 |
+| `lib/xp.ts` med konstanter + nivåkurva | Task 1 |
+| `addXp()` i `lib/progress.ts` | Task 3 |
+| XP delas ut i `recordQuizResult` | Task 3 |
+| Dashboard XP/nivå-kort med progressbar | Task 10 |
+| `lib/quizdb.ts` IndexedDB-wrapper | Task 5 |
+| `QuizAttempt`-interface i `lib/types.ts` | Task 2 |
+| `saveAttempt` vid quizslut i QuizPage | Task 7 |
+| `getWrongQuestionIds` | Task 5 |
+| `getQuestionsByIds` i `lib/questions.ts` | Task 4 |
+| "Repetera felsvar"-val i QuizConfig | Task 8 |
+| Server-säker (no-op om `indexedDB === undefined`) | Task 5 |

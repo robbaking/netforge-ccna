@@ -5,6 +5,12 @@ import type { Topology, TopoDevice } from "@/lib/topology";
 import type { LabEntry } from "@/data/labcatalog";
 import { markLabDone, isLabDone } from "@/lib/labprogress";
 import { TopoSvg } from "./TopoSvg";
+import { verifyConfig, isVerified } from "@/lib/labverify";
+import type { VerificationResult } from "@/lib/labverify";
+import { markLabChecked } from "@/lib/checklistprogress";
+import { PHASE_CHECKLISTS } from "@/data/phasechecklist";
+import { addXp } from "@/lib/progress";
+import { XP } from "@/lib/xp";
 
 const DIFFICULTY_COLOR: Record<string, string> = {
   Lätt: "var(--green)",
@@ -171,6 +177,100 @@ function FacitSection({ topo }: { topo: Topology }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Verification panel ───────────────────────────────────────────────────────
+
+function VerifyPanel({ lab, onVerified }: { lab: LabEntry; onVerified: () => void }) {
+  const [input, setInput] = useState("");
+  const [results, setResults] = useState<VerificationResult[] | null>(null);
+  const [verified, setVerified] = useState(false);
+
+  const checks = lab.verificationChecks;
+  if (!checks || checks.length === 0) return null;
+
+  const target = PHASE_CHECKLISTS.find(item => item.labId === lab.id);
+  const placeholder =
+    target?.verificationTarget === "show-spanning-tree"
+      ? "Klistra in output från: show spanning-tree"
+      : target?.verificationTarget === "show-ip-nat-translations"
+      ? "Klistra in output från: show ip nat translations"
+      : "Klistra in output från: show running-config";
+
+  function runVerify() {
+    const res = verifyConfig(input, checks!);
+    setResults(res);
+    if (isVerified(res) && !verified) {
+      setVerified(true);
+      if (target) markLabChecked(target.id);
+      onVerified();
+    }
+  }
+
+  return (
+    <div style={{
+      marginTop: 20, padding: "14px 16px", borderRadius: 8,
+      background: "var(--bg-elevated)", border: "1px solid var(--border)",
+    }}>
+      <div style={{ fontSize: 10, color: "var(--cyan)", textTransform: "uppercase", letterSpacing: 1.5, fontWeight: 600, marginBottom: 10 }}>
+        Verifiera lab
+      </div>
+      <textarea
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        placeholder={placeholder}
+        rows={6}
+        style={{
+          width: "100%", boxSizing: "border-box",
+          background: "var(--bg-base)", border: "1px solid var(--border)",
+          borderRadius: 6, padding: "10px 12px", resize: "vertical",
+          fontSize: 11, color: "var(--text)", fontFamily: "'JetBrains Mono', monospace",
+          lineHeight: 1.5, outline: "none",
+        }}
+      />
+      <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+        <button
+          onClick={runVerify}
+          disabled={!input.trim()}
+          className="nf-btn-primary"
+          style={{ fontSize: 11, padding: "7px 16px", opacity: input.trim() ? 1 : 0.4 }}
+        >
+          Kör verifiering
+        </button>
+        {verified && (
+          <span style={{ fontSize: 11, color: "var(--green)" }}>✓ Lab godkänd! +{XP.labComplete} XP</span>
+        )}
+      </div>
+
+      {results && (
+        <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 5 }}>
+          {results.map(r => (
+            <div key={r.check.id} style={{
+              display: "flex", alignItems: "flex-start", gap: 8,
+              padding: "6px 10px", borderRadius: 5,
+              background: r.passed ? "#00e67608" : r.check.required ? "#ff4c6a08" : "transparent",
+              border: `1px solid ${r.passed ? "#00e67625" : r.check.required ? "#ff4c6a25" : "var(--border)"}`,
+            }}>
+              <span style={{ color: r.passed ? "var(--green)" : r.check.required ? "var(--red)" : "var(--text-dim)", fontSize: 12, flexShrink: 0 }}>
+                {r.passed ? "✅" : r.check.required ? "❌" : "⚠️"}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 10.5, color: "var(--text)" }}>{r.check.description}</span>
+                {!r.passed && r.check.hint && (
+                  <span style={{ display: "block", fontSize: 10, color: "var(--text-dim)", marginTop: 2 }}>
+                    Hint: {r.check.hint}
+                  </span>
+                )}
+              </div>
+              {!r.check.required && (
+                <span style={{ fontSize: 9, color: "var(--text-dim)", flexShrink: 0 }}>valfri</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -471,6 +571,20 @@ export default function LabCard({ lab, isUnlocked }: Props) {
             </button>
           )}
         </div>
+
+        {/* Verification panel */}
+        <VerifyPanel
+          lab={lab}
+          onVerified={() => {
+            if (!labDone) {
+              markLabDone(lab.id);
+              setLabDone(true);
+              setDoneBanner(true);
+              setTimeout(() => setDoneBanner(false), 3000);
+              addXp(XP.labComplete);
+            }
+          }}
+        />
 
         {/* Expandable facit */}
         {showFacit && (

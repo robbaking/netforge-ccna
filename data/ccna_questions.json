@@ -1006,6 +1006,767 @@
       "correct": 1,
       "explanation": "Generativ AI (t.ex. LLM-modeller) skapar konfigurationer, förklaringar och kod. Prediktiv AI analyserar nätverksdata (logs, metrics) för att förutsäga problem, kapacitetsbehov och avvikelser. Cisco använder båda i DNA Center och Meraki.",
       "source": "manual"
+    },
+
+    {
+      "id": "nf-016",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad är syftet med ARP (Address Resolution Protocol)?",
+      "options": [
+        "Lösa domännamn till IP-adresser",
+        "Lösa IP-adresser till MAC-adresser på det lokala nätverket",
+        "Kryptera trafik på Lager 2",
+        "Tilldela IP-adresser till klienter dynamiskt"
+      ],
+      "correct": 1,
+      "explanation": "ARP skickar en Layer 2-broadcast ('vem har IP X?') och ägaren svarar med sin MAC-adress. ARP-cachen lagrar IP↔MAC-mappningar temporärt för att undvika upprepade förfrågningar."
+    },
+    {
+      "id": "nf-017",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "I vilken ordning sker TCP:s trevägshandskakning?",
+      "options": [
+        "SYN → ACK → SYN-ACK",
+        "SYN → SYN-ACK → ACK",
+        "ACK → SYN → SYN-ACK",
+        "SYN-ACK → SYN → ACK"
+      ],
+      "correct": 1,
+      "explanation": "TCP-anslutning: 1) Klient skickar SYN (synkronisera sekvensnummer), 2) Server svarar med SYN-ACK (bekräftar + synkroniserar sitt sekvensnummer), 3) Klient bekräftar med ACK. Anslutningen är nu etablerad."
+    },
+    {
+      "id": "nf-018",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket protokoll och verktyg används för att testa nätverksanslutning och mäta svarstid?",
+      "options": [
+        "TCP — telnet",
+        "UDP — traceroute",
+        "ICMP — ping",
+        "ARP — arp -a"
+      ],
+      "correct": 2,
+      "explanation": "ICMP (Internet Control Message Protocol) används av ping via Echo Request/Echo Reply-meddelanden. Ping visar svarstid (RTT) och pakeförlust. Traceroute använder ICMP Time Exceeded för att kartlägga vägen."
+    },
+    {
+      "id": "nf-019",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vilket påstående om kollisions- och broadcast-domäner stämmer för en switch utan VLAN?",
+      "options": [
+        "En switch skapar en stor kollisionsdomän men bryter upp broadcast-domäner",
+        "En switch bryter upp kollisionsdomäner per port men alla portar delar samma broadcast-domän",
+        "En router skapar en kollisionsdomän per port och alla portar delar broadcast-domän",
+        "Hubbar bryter upp kollisionsdomäner effektivt"
+      ],
+      "correct": 1,
+      "explanation": "Varje switchport är en separat kollisionsdomän (full-duplex eliminerar kollisioner). Utan VLAN delar alla portar en broadcast-domän. Routrar bryter upp broadcast-domäner — varje routerport = en ny broadcast-domän."
+    },
+    {
+      "id": "nf-020",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad gör CDP (Cisco Discovery Protocol)?",
+      "options": [
+        "Ett säkerhetsprotokoll för att autentisera Cisco-enheter",
+        "Ett Cisco-proprietärt Layer 2-protokoll för att identifiera direkt anslutna Cisco-grannar",
+        "Ett routingprotokoll specifikt för Cisco-enheter",
+        "Ett protokoll för konfigurationssynkronisering mellan Cisco-enheter"
+      ],
+      "correct": 1,
+      "explanation": "CDP skickar multicast-meddelanden var 60:e sekund och avslöjar: hostname, IOS-version, IP-adress, modell och gränssnittsnamn på direkt anslutna Cisco-enheter. Kommando: 'show cdp neighbors detail'."
+    },
+    {
+      "id": "nf-021",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad skiljer LLDP från CDP?",
+      "options": [
+        "LLDP är snabbare och mer detaljerad än CDP",
+        "LLDP är en öppen IEEE-standard (802.1AB) som fungerar med enheter från alla tillverkare; CDP är Cisco-proprietärt",
+        "CDP fungerar med enheter från alla tillverkare; LLDP är bara för Cisco",
+        "De är identiska protokoll med olika namn"
+      ],
+      "correct": 1,
+      "explanation": "LLDP (Link Layer Discovery Protocol, IEEE 802.1AB) är den öppna standarden — fungerar oavsett tillverkare (Cisco, Juniper, HP m.fl.). CDP fungerar bara mellan Cisco-enheter. Bägge arbetar på Lager 2."
+    },
+    {
+      "id": "nf-022",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Hur många användbara host-adresser finns i ett /27-subnät?",
+      "options": ["14", "30", "62", "126"],
+      "correct": 1,
+      "explanation": "/27 = mask 255.255.255.224. Host-bitar: 32–27 = 5 → 2⁵ = 32 adresser per subnät. Minus nätverksadress och broadcast = 30 användbara host-adresser. Formel: 2ⁿ–2 där n = antal host-bitar."
+    },
+    {
+      "id": "nf-023",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad innebär TCP-flödeskontroll via 'sliding window' (skjutfönster)?",
+      "options": [
+        "TCP delar upp data i lika stora segment med fast storlek",
+        "Mottagaren styr hur mycket data avsändaren kan skicka utan bekräftelse, för att undvika buffertöverflöd",
+        "TCP-fönstret kontrollerar antalet tillåtna parallella TCP-anslutningar",
+        "Windowsoperativsystemets TCP-implementation"
+      ],
+      "correct": 1,
+      "explanation": "Mottagaren annonserar ett receive window (rwnd) — max antal bytes avsändaren kan ha ute obevittnade. Om bufferten fylls sätts rwnd = 0 (zero window) för att pausa avsändaren. Fönstret växer dynamiskt med tillgänglig buffertstorlek."
+    },
+    {
+      "id": "nf-024",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilka portnummer är korrekta för HTTP, HTTPS, FTP-kontroll och Telnet?",
+      "options": [
+        "80, 443, 20, 22",
+        "80, 443, 21, 23",
+        "8080, 443, 20, 23",
+        "80, 8443, 22, 23"
+      ],
+      "correct": 1,
+      "explanation": "Vanliga portar: HTTP=80, HTTPS=443, FTP kontroll=21, FTP data=20, SSH=22, Telnet=23, DNS=53, DHCP server=67, DHCP klient=68, SMTP=25, SNMP=161."
+    },
+    {
+      "id": "nf-025",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är SLAAC (Stateless Address Autoconfiguration) i IPv6?",
+      "options": [
+        "En metod för att automatiskt tilldela IPv6-adresser via en central DHCPv6-server",
+        "En metod där en enhet automatiskt genererar sin IPv6-adress baserat på nätverksprefixet (från RA) och sitt eget interface ID (EUI-64 eller slumpmässigt)",
+        "En säkerhetsmekanism för att validera IPv6-adresser",
+        "En teknik för att komprimera IPv6-adresser i routing-tabeller"
+      ],
+      "correct": 1,
+      "explanation": "SLAAC: routern annonserar nätverksprefixet (64 bitar) via Router Advertisement (RA). Enheten skapar sin adress = prefix + interface ID (EUI-64 från MAC eller Privacy Extensions). Ingen DHCPv6-server krävs."
+    },
+    {
+      "id": "nf-026",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "I vilken ordning sker inkapslingen (encapsulation) när data skickas från en applikation till nätverket?",
+      "options": [
+        "Bits → Frame → Paket → Segment → Data",
+        "Data → Segment → Paket → Frame → Bits",
+        "Segment → Data → Frame → Paket → Bits",
+        "Data → Paket → Segment → Frame → Bits"
+      ],
+      "correct": 1,
+      "explanation": "Inkapsling (top-down OSI): Applikationsdata → Lager 4 lägger till TCP/UDP-header (Segment) → Lager 3 lägger till IP-header (Paket) → Lager 2 lägger till Ethernet-header+trailer (Frame) → Lager 1 konverterar till bitar."
+    },
+    {
+      "id": "nf-027",
+      "domain": "network-fundamentals",
+      "difficulty": "hard",
+      "question": "Vad är ett 'gratuitous ARP' och vilket syfte fyller det?",
+      "options": [
+        "En ARP-begäran för att hitta en okänd MAC-adress i ett annat subnät",
+        "En ARP-begäran där en enhet frågar om sin egna IP-adress — används för att uppdatera grannars ARP-cachar och detektera IP-konflikter",
+        "En krypterad ARP-begäran som används av DHCP-servern",
+        "En ARP-begäran som skickas av routrar för att annonsera default gateway"
+      ],
+      "correct": 1,
+      "explanation": "Gratuitous ARP: enheten skickar en ARP-begäran för sin egna IP (source=target). Syfte: (1) uppdatera grannars ARP-cachar vid t.ex. HSRP-failover eller IP-flytt, (2) detektera IP-konflikter (om någon svarar existerar konflikten)."
+    },
+    {
+      "id": "nf-028",
+      "domain": "network-fundamentals",
+      "difficulty": "normal",
+      "question": "Vilket IPv6-adressprefix identifierar en multicast-adress?",
+      "options": ["FE80::/10", "FC00::/7", "FF00::/8", "2000::/3"],
+      "correct": 2,
+      "explanation": "IPv6 multicast börjar alltid med FF (FF00::/8). Exempel: FF02::1 = all nodes, FF02::2 = all routers, FF02::5 = all OSPF routers. IPv6 har inget broadcast — multicast används istället för alla broadcast-funktioner."
+    },
+    {
+      "id": "nf-029",
+      "domain": "network-fundamentals",
+      "difficulty": "hard",
+      "question": "Vad är Proxy ARP och när är det problematiskt?",
+      "options": [
+        "En attackteknik där angripare spoofar ARP-svar för att avlyssna trafik",
+        "En funktion där en router svarar på ARP-förfrågningar å en fjärrenhet vägnar — möjliggör kommunikation utan default gateway men skapar skalbarhetsproblem",
+        "En metod för att kryptera ARP-trafik i känsliga nätverk",
+        "En IPv6-teknik som ersätter ARP i moderna nätverk"
+      ],
+      "correct": 1,
+      "explanation": "Proxy ARP: routern svarar med sin MAC på ARP-förfrågningar för IP:n i andra subnät — klienten behöver ingen default gateway. Problem: routern lär sig inga MAC-adresser korrekt, skapar enorma ARP-cachar och fungerar dåligt i stora nätverk."
+    },
+    {
+      "id": "nf-030",
+      "domain": "network-fundamentals",
+      "difficulty": "easy",
+      "question": "Vilket påstående om UDP är korrekt?",
+      "options": [
+        "UDP garanterar leveransordning av alla segment",
+        "UDP upprättar en anslutning (handshaking) innan dataöverföring",
+        "UDP är connectionless, utan garanterad leverans, och har lägre overhead än TCP",
+        "UDP används primärt för webbsidor och filöverföring"
+      ],
+      "correct": 2,
+      "explanation": "UDP (User Datagram Protocol): connectionless, ingen handshaking, ingen sekvensering, ingen retransmission. Lägre overhead och latens. Används av DNS, DHCP, VoIP, strömning och gaming där snabbhet > tillförlitlighet."
+    },
+
+    {
+      "id": "na-015",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är en 'Designated Port' (DP) i STP och hur väljs den?",
+      "options": [
+        "Den port med lägst Path Cost till root bridge per switch",
+        "Den port per nätverkssegment som vidarebefordrar trafik mot root — väljs baserat på lägst ackumulerad Path Cost per segment",
+        "Backup-porten som blockerar trafik i normaltillstånd",
+        "Den port på root bridge med lägst bandbredd"
+      ],
+      "correct": 1,
+      "explanation": "STP-portroller: Root Port (RP) = bästa vägen till root bridge per switch (en per icke-root switch). Designated Port (DP) = vidarebefordrar på varje segment mot root (lägst cost per länk, en per segment). Alternate Port = blockerar för att förhindra loop."
+    },
+    {
+      "id": "na-016",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan VTP Server och VTP Transparent?",
+      "options": [
+        "VTP Server distribuerar VLAN-info; VTP Transparent synkroniserar sin VLAN-databas från servern",
+        "VTP Transparent hanterar sina VLAN lokalt och vidarebefordrar VTP-meddelanden men tillämpar dem inte; VTP Server skapar och distribuerar VLAN-databasen",
+        "VTP Transparent kan inte delta i VTP alls",
+        "VTP Server och Transparent är identiska i funktion"
+      ],
+      "correct": 1,
+      "explanation": "VTP Server: skapar/ändrar/tar bort VLAN, distribuerar till klienter, sparar i NVRAM. VTP Transparent: hanterar VLAN lokalt (oberoende), vidarebefordrar VTP-paket utan att använda dem. VTP Client: synkroniserar från server, kan ej skapa VLAN lokalt."
+    },
+    {
+      "id": "na-017",
+      "domain": "network-access",
+      "difficulty": "hard",
+      "question": "Varför kan en VTP Client med ett högre revisionsummer råka radera VLAN på VTP Servern?",
+      "options": [
+        "VTP Client kan aldrig påverka VTP Server",
+        "Om en switch med högre revision number ansluts till domänen distribueras dess VLAN-databas (möjligen tom eller fel) till alla switchar — alla VLAN med lägre revision raderas",
+        "VTP revision number är bara ett informationsfält",
+        "Problemet uppstår bara om VTP version 1 används"
+      ],
+      "correct": 1,
+      "explanation": "VTP revision number: den switch med högst nummer vinner och skriver över alla andras VLAN-databas. Om en switch återanvänds från en annan domän med ett högt revisionsummer kan den radera alla VLAN i den nya domänen. Lösning: nollställ revision (byt VTP-domännamn eller sätt transparent-läge) innan anslutning."
+    },
+    {
+      "id": "na-018",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vilken säkerhetsförbättring introducerar WPA3 jämfört med WPA2?",
+      "options": [
+        "WPA3 är snabbare men har samma säkerhetsnivå som WPA2",
+        "WPA3 introducerar SAE (Simultaneous Authentication of Equals) som ersätter PSK och ger skydd mot offline-ordlisteattacker samt Forward Secrecy",
+        "WPA3 kräver RADIUS-server och används bara i företagsmiljö",
+        "WPA3 krypterar med RC4 istället för AES för ökad kompatibilitet"
+      ],
+      "correct": 1,
+      "explanation": "WPA3-Personal: SAE (Dragonfly handshake) ersätter PSK — resistent mot offline brute force även om lösenordet är svagt. Forward Secrecy: varje session använder unika nycklar, tidigare trafik kan ej dekrypteras om nyckel komprometteras. WPA3-Enterprise: 192-bitars kryptering."
+    },
+    {
+      "id": "na-019",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är de tre rollerna i 802.1X-autentisering?",
+      "options": [
+        "Klient, Gateway, Autentiseringsserver",
+        "Supplicant (klient), Authenticator (switch/AP), Authentication Server (RADIUS)",
+        "Initiator, Validator, Authorizer",
+        "User, Device, SDN Controller"
+      ],
+      "correct": 1,
+      "explanation": "802.1X: Supplicant = klientenheten (PC, IP-telefon). Authenticator = nätverksenheten (switch/AP) som kontrollerar portåtkomst. Authentication Server = RADIUS-server som verifierar identiteten. EAP (Extensible Authentication Protocol) används för att utbyta autentiseringsdata."
+    },
+    {
+      "id": "na-020",
+      "domain": "network-access",
+      "difficulty": "hard",
+      "question": "Vad skyddar DAI (Dynamic ARP Inspection) mot och hur fungerar det?",
+      "options": [
+        "Obehöriga DHCP-servrar — DAI kontrollerar att DHCP-svar kommer från betrodda portar",
+        "ARP-spoofing — DAI validerar ARP-paket mot DHCP Snooping-bindningstabellen och kastar ARP-svar med felaktiga IP/MAC-kombinationer",
+        "MAC flooding — DAI begränsar antalet MAC-adresser per port",
+        "STP-loopar — DAI blockerar BPDU:er på klientportar"
+      ],
+      "correct": 1,
+      "explanation": "DAI kontrollerar varje ARP-svar på 'untrusted'-portar mot DHCP Snooping-databasen (IP↔MAC-mappning). Felaktiga ARP-svar kastas, vilket förhindrar ARP poisoning/MITM-attacker. 'Trusted' portar (uplinks, DHCP-server) bypassar inspektionen."
+    },
+    {
+      "id": "na-021",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vilket Cisco-kommando konfigurerar sub-interface G0/0.10 för VLAN 10 i Router-on-a-Stick?",
+      "options": [
+        "interface G0/0.10 / vlan 10 trunk / ip address [adr] [mask]",
+        "interface G0/0.10 / encapsulation dot1Q 10 / ip address [adr] [mask]",
+        "interface G0/0 / vlan 10 mode trunk / ip address [adr] [mask]",
+        "interface vlan 10 / ip address [adr] [mask]"
+      ],
+      "correct": 1,
+      "explanation": "Router-on-a-Stick: skapa sub-interface (interface G0/0.10), konfigurera 'encapsulation dot1Q 10' (VLAN-taggning), sedan IP-adress. Det fysiska gränssnittet (G0/0) måste ha 'no shutdown'. Varje sub-interface hanterar ett VLAN."
+    },
+    {
+      "id": "na-022",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad är en SVI (Switched Virtual Interface) och vad används den till?",
+      "options": [
+        "En fysisk port på en L3-switch avsedd för WAN-anslutningar",
+        "Ett virtuellt Layer 3-gränssnitt per VLAN på en L3-switch — används för inter-VLAN routing och management-åtkomst till switchen",
+        "En krypterad tunnel mellan switchar för VLAN-trafik",
+        "En redundant port för automatisk failover vid länkfel"
+      ],
+      "correct": 1,
+      "explanation": "SVI (interface vlan X): L3-switchen ger varje VLAN ett IP-gränssnitt. Används för inter-VLAN routing (effektivare än Router-on-a-Stick) och management-åtkomst (SSH/Telnet) till switchen. Kommando: 'interface vlan 10 / ip address x.x.x.x mask / no shutdown'."
+    },
+    {
+      "id": "na-023",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vilka tre kanaler i 2.4 GHz-bandet är icke-överlappande och rekommenderas?",
+      "options": [
+        "1, 5, 9",
+        "1, 6, 11",
+        "2, 7, 12",
+        "3, 6, 9"
+      ],
+      "correct": 1,
+      "explanation": "2.4 GHz: 13 kanaler (US: 11) men 802.11 använder 20 MHz bredd och kanalerna är 5 MHz åtskilda — de överlappar varandra. Kanalerna 1, 6 och 11 är de enda utan överlappning och ska användas i täta WLAN-miljöer för att minimera co-channel interferens."
+    },
+    {
+      "id": "na-024",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Vad händer vid port security-brott i violationsläget 'Restrict'?",
+      "options": [
+        "Porten stängs av omedelbart (err-disabled)",
+        "Paketet kastas, porten förblir aktiv, en logg genereras och violation-räknaren ökar",
+        "Paketet vidarebefordras utan begränsning men loggas",
+        "Switchen skickar en SNMP-trap men ingen annan åtgärd vidtas"
+      ],
+      "correct": 1,
+      "explanation": "Port security violation modes: Protect = kasta paket tyst, ingen logg. Restrict = kasta paket + syslog + öka violation counter. Shutdown (default) = err-disabled + syslog + SNMP-trap. Err-disabled kräver 'shutdown/no shutdown' för att återaktiveras."
+    },
+    {
+      "id": "na-025",
+      "domain": "network-access",
+      "difficulty": "normal",
+      "question": "Hur många portlägen har RSTP och vilka är de?",
+      "options": [
+        "5 lägen: Disabled, Blocking, Listening, Learning, Forwarding",
+        "3 lägen: Discarding, Learning, Forwarding",
+        "4 lägen: Discarding, Blocking, Learning, Forwarding",
+        "2 lägen: Blocking och Forwarding"
+      ],
+      "correct": 1,
+      "explanation": "RSTP reducerar STP:s 5 tillstånd till 3: Discarding (ersätter Disabled+Blocking+Listening — ingen vidarebefordring), Learning (lär MAC-adresser men vidarebefordrar inte data), Forwarding (normal drift). Färre tillstånd bidrar till snabbare konvergens."
+    },
+    {
+      "id": "na-026",
+      "domain": "network-access",
+      "difficulty": "hard",
+      "question": "Vad är en 'Topology Change Notification' (TCN) BPDU i STP och vad utlöser den?",
+      "options": [
+        "En BPDU som väljer ny root bridge efter ett länkfel",
+        "En BPDU som skickas ut på root port när en port övergår till Forwarding eller när en Forwarding/Learning port går ner — informerar root bridge om topologiändringen",
+        "En periodisk BPDU som bekräftar att topologin är stabil",
+        "En BPDU som aktiverar PortFast på åtkomstportar"
+      ],
+      "correct": 1,
+      "explanation": "TCN: switch skickar TCN ut på sin root port mot root bridge. Root bridge sprider konfigurerings-BPDU med TC-flaggan satt till alla switchar. Switchar sänker då MAC-tabellens aging-timer från 300s till forward delay (15s) för att snabbt tömma inaktuella MAC-adresser."
+    },
+
+    {
+      "id": "ic-015",
+      "domain": "ip-connectivity",
+      "difficulty": "hard",
+      "question": "Vilka två K-värden i EIGRP:s composite metric används som standard?",
+      "options": [
+        "K1 (bandbredd) och K2 (load) — K1=1, K2=1",
+        "K1 (bandbredd) och K3 (fördröjning) — K1=1, K3=1, övriga=0",
+        "K3 (fördröjning) och K4 (tillförlitlighet) — K3=1, K4=1",
+        "Alla fem K-värden aktiveras som standard"
+      ],
+      "correct": 1,
+      "explanation": "EIGRP composite metric med standardvärden (K1=1, K2=0, K3=1, K4=0, K5=0): metric = (10⁷/lägsta_bandbredd + summa_fördröjning) × 256. K1=bandbredd, K3=fördröjning driver routingbeslut. K2, K4, K5 (load, reliability, MTU) är avaktiverade som standard."
+    },
+    {
+      "id": "ic-016",
+      "domain": "ip-connectivity",
+      "difficulty": "hard",
+      "question": "Vad är DUAL (Diffusing Update Algorithm) i EIGRP?",
+      "options": [
+        "En algoritm för att beräkna subnätmasker i EIGRP",
+        "Den algoritm som garanterar loop-fri routing och subsekundsnabb konvergens genom att hålla en Feasible Successor (backup-route) i topologitabellen",
+        "En lastbalanserings-algoritm för equal-cost routes i EIGRP",
+        "Algoritmen för att välja DR/BDR i EIGRP på multi-access-nät"
+      ],
+      "correct": 1,
+      "explanation": "DUAL: varje route har en Successor (bästa) och möjliga Feasible Successors (FS) i topologitabellen. FS är loop-garanterat backup. Om Successor försvinner aktiveras FS omedelbart utan ett nytt routingmeddelande → subsekundsnabb konvergens. Ingen FS → DUAL skickar Query-paket."
+    },
+    {
+      "id": "ic-017",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vad är fördelen med OSPF multi-area design jämfört med single-area?",
+      "options": [
+        "Multi-area är obligatoriskt för OSPF att fungera på routrar",
+        "Multi-area reducerar Link State Database (LSDB)-storleken och SPF-beräkningstid per router — LSA-flooding begränsas inom varje area",
+        "Multi-area möjliggör kryptering av OSPF-uppdateringar",
+        "Multi-area ökar OSPF-konvergenstiden för bättre stabilitet"
+      ],
+      "correct": 1,
+      "explanation": "OSPF multi-area: Area 0 (backbone) är obligatorisk. ABR-routrar kopplar samman areas och genererar Summary LSA (Type 3). Topologiändringar inom en area triggar SPF bara inom den arean — inte hela nätverket. Skalbarhet och stabilitet är nyckelfördelarna."
+    },
+    {
+      "id": "ic-018",
+      "domain": "ip-connectivity",
+      "difficulty": "hard",
+      "question": "Vad är skillnaden mellan ABR och ASBR i OSPF?",
+      "options": [
+        "ABR ansluter OSPF till externa routingprotokoll; ASBR kopplar OSPF-areas",
+        "ABR (Area Border Router) kopplar ihop OSPF-areas och genererar Type 3 LSA; ASBR (AS Boundary Router) redistribuerar externa routes (BGP, EIGRP, statiska) in i OSPF via Type 5 LSA",
+        "ABR är en backup-router; ASBR är den primära",
+        "De är synonymer i multi-area OSPF"
+      ],
+      "correct": 1,
+      "explanation": "ABR: interface i två+ OSPF-areas, genererar Type 3 Summary LSA för inter-area routes. ASBR: redistribuerar externa routes in i OSPF, genererar Type 5 External LSA. En router kan vara båda ABR och ASBR samtidigt."
+    },
+    {
+      "id": "ic-019",
+      "domain": "ip-connectivity",
+      "difficulty": "easy",
+      "question": "Vilket kommando aktiverar IPv6 routing globalt på en Cisco-router?",
+      "options": [
+        "ip routing ipv6",
+        "ipv6 unicast-routing",
+        "enable ipv6 routing",
+        "ip routing enable ipv6"
+      ],
+      "correct": 1,
+      "explanation": "'ipv6 unicast-routing' aktiverar IPv6 routing globalt (krävs för att routern ska vidarebefordra IPv6-paket). IPv6-adresser konfigureras per interface med 'ipv6 address [prefix/längd]'. IPv6-statisk route: 'ipv6 route ::/0 [next-hop]'."
+    },
+    {
+      "id": "ic-020",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vad är syftet med route summarization (aggregering)?",
+      "options": [
+        "Att dela upp ett subnät i mindre delar för bättre adressstyrning",
+        "Att slå ihop flera specifika routes till en enda aggregerad route — minskar routingtabellens storlek och begränsar LSA/uppdateringsflöde",
+        "Att skapa en default route för all outbound-trafik",
+        "Att balansera last mellan routes med samma kostnad"
+      ],
+      "correct": 1,
+      "explanation": "Summarization aggregerar t.ex. 192.168.0.0/24–192.168.3.0/24 → 192.168.0.0/22. Fördelar: mindre routingtabeller, färre LSA/uppdateringar i OSPF/EIGRP, snabbare lookup, och topologiändringar inom summarized-blocket döljs från resten av nätverket."
+    },
+    {
+      "id": "ic-021",
+      "domain": "ip-connectivity",
+      "difficulty": "hard",
+      "question": "Vad genererar en OSPF Type 1 LSA (Router LSA) och var flödas den?",
+      "options": [
+        "Bara ABR genererar Type 1 LSA för inter-area routes — flödas till hela domänen",
+        "Varje OSPF-router genererar sin Type 1 LSA för sina direktanslutna links — flödas bara inom routerns egna OSPF-area",
+        "Type 1 LSA genereras bara av ASBR för externa routes",
+        "DR/BDR genererar Type 1 LSA för multi-access-nät"
+      ],
+      "correct": 1,
+      "explanation": "OSPF LSA-typer: Type 1 (Router LSA) = varje router för sina interface/links, begränsad till arean. Type 2 (Network LSA) = DR på multi-access-nät. Type 3 (Summary LSA) = ABR för inter-area. Type 4 = ABR för ASBR-position. Type 5 (External LSA) = ASBR för externa routes, flödas till hela domänen."
+    },
+    {
+      "id": "ic-022",
+      "domain": "ip-connectivity",
+      "difficulty": "normal",
+      "question": "Vilket administrative distance (AD) har EIGRP interna routes?",
+      "options": ["90", "110", "120", "170"],
+      "correct": 0,
+      "explanation": "AD-värden (lägre = mer betrodd): Connected=0, Static=1, EIGRP intern=90, OSPF=110, IS-IS=115, RIP=120, EIGRP extern=170. EIGRP intern (90) föredras framför OSPF (110) vid redistribution. EIGRP extern (170) är minst betrodd bland IGP:er."
+    },
+
+    {
+      "id": "is-013",
+      "domain": "ip-services",
+      "difficulty": "easy",
+      "question": "Vad är TFTP och vilken port och vilket transportprotokoll använder det?",
+      "options": [
+        "Trivial File Transfer Protocol — TCP port 21",
+        "Trivial File Transfer Protocol — UDP port 69",
+        "Transfer File Tool Protocol — TCP port 69",
+        "Total File Transfer Protocol — UDP port 21"
+      ],
+      "correct": 1,
+      "explanation": "TFTP (Trivial File Transfer Protocol): UDP port 69, ingen autentisering, ingen kryptering, ingen katalogstruktur. Används i nätverk för att ladda upp/ner Cisco IOS-bilder och konfigurationsfiler. Enkelt men osäkert — ska bara användas i betrodda management-nätverk."
+    },
+    {
+      "id": "is-014",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad skiljer FTP från TFTP?",
+      "options": [
+        "TFTP stöder autentisering och katalognavigering; FTP stöder det inte",
+        "FTP (TCP 21/20) stöder autentisering, katalognavigering och fillistning; TFTP (UDP 69) är enklare utan autentisering eller katalogstruktur",
+        "FTP använder UDP; TFTP använder TCP",
+        "De är identiska protokoll med olika standardnamn"
+      ],
+      "correct": 1,
+      "explanation": "FTP: TCP port 21 (kontroll), port 20 (data i aktiv mode), autentisering, kataloger, fillistning — men krypterar inte i klartext (använd SFTP/FTPS för säkerhet). TFTP: UDP port 69, enkla GET/PUT, ingen autentisering — typiskt för IOS-distribution och PXE-boot."
+    },
+    {
+      "id": "is-015",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad är DSCP (Differentiated Services Code Point) i QoS?",
+      "options": [
+        "Ett protokoll som prioriterar routrar baserat på tillgänglig bandbredd",
+        "Ett 6-bitarsfält i IP-headern som märker paket med prioritetsklass för differentierad tjänstebehandling",
+        "En metod att kryptera röst- och videotrafik i IP-nätverk",
+        "En bandbreddsallokeringsalgoritm på Lager 2"
+      ],
+      "correct": 1,
+      "explanation": "DSCP är i IP-headerns ToS/DS-fält (6 bitar = 64 möjliga värden). Vanliga klasser: EF (46) = VoIP (låg latens), AF11-43 = affärsapplikationer (assured forwarding), CS6/CS7 = routing/nätverkskontroll, BE (0) = best-effort. QoS måste konfigureras konsekvent i alla noder."
+    },
+    {
+      "id": "is-016",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan IaaS, PaaS och SaaS?",
+      "options": [
+        "IaaS = applikationer, PaaS = plattformar, SaaS = infrastruktur — alla hanteras av molnleverantören",
+        "IaaS = VM/lagring/nätverk (kunden hanterar OS+apps); PaaS = utvecklingsplattform (kunden hanterar applikationen); SaaS = färdiga applikationer via browser (leverantören hanterar allt)",
+        "De är synonymer för molntjänster med olika prissättningsmodeller",
+        "IaaS = privat moln; PaaS = hybridmoln; SaaS = publikt moln"
+      ],
+      "correct": 1,
+      "explanation": "IaaS (t.ex. AWS EC2, Azure VMs): kunden hanterar OS, middleware, applikationer. PaaS (t.ex. Heroku, Azure App Service): kunden hanterar bara applikation och data. SaaS (t.ex. Office 365, Salesforce, Cisco Webex): leverantören hanterar allt — kunden bara använder."
+    },
+    {
+      "id": "is-017",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad erbjuder GLBP (Gateway Load Balancing Protocol) som HSRP inte gör?",
+      "options": [
+        "GLBP konvergerar snabbare än HSRP vid gateway-fel",
+        "GLBP möjliggör aktiv lastbalansering — alla routrar i gruppen vidarebefordrar trafik samtidigt, till skillnad från HSRP där bara en router är aktiv",
+        "GLBP är en öppen standard (RFC); HSRP är Cisco-proprietärt",
+        "GLBP stöder IPv6; HSRP stöder det inte alls"
+      ],
+      "correct": 1,
+      "explanation": "GLBP (Cisco-proprietärt): AVG (Active Virtual Gateway) tilldelar olika virtuella MAC-adresser (AVF) till klienter via ARP-svar → alla routrar vidarebefordrar aktivt. HSRP/VRRP: bara en aktiv router, standby är passiv. VRRP (RFC 5798) är öppen standard men saknar GLBP:s lastbalansering."
+    },
+    {
+      "id": "is-018",
+      "domain": "ip-services",
+      "difficulty": "normal",
+      "question": "Vad innebär NTP Stratum-nivån och vad är Stratum 1?",
+      "options": [
+        "NTP-serverns geografiska position — Stratum 1 = europeisk tidzon",
+        "Antalet hopp från en primär tidskälla — Stratum 1 är direkt kopplat till en atomklocka eller GPS-mottagare",
+        "Antalet NTP-klienter anslutna till servern — Stratum 1 = max 1 klient",
+        "NTP-protokollets versionsnummer — Stratum 1 = NTPv1"
+      ],
+      "correct": 1,
+      "explanation": "NTP Stratum: 0 = referensklocka (GPS, cesiumklocka — ej nätverksenhet), 1 = direkt kopplad till Stratum 0, 2 = synkroniserar från Stratum 1 osv. Cisco-enheter är typiskt Stratum 8+. Stratum 16 = ej synkroniserad. Lägre stratum = mer precis tidkälla."
+    },
+
+    {
+      "id": "sf-014",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är den primära fördelen med namngivna ACL:er (named ACL) jämfört med numrerade?",
+      "options": [
+        "Namngivna ACL:er processas snabbare av routerhårdvaran",
+        "Namngivna ACL:er tillåter att enskilda ACE:n tas bort via sekvensnummer utan att hela listan raderas",
+        "Namngivna ACL:er stöder fler protokoll och matchkriterier",
+        "Det finns ingen funktionell skillnad — de är fullständigt ekvivalenta"
+      ],
+      "correct": 1,
+      "explanation": "Named ACL (ip access-list extended NAMN): tillåter 'no [sekvensnummer]' för att ta bort specifika regler och sekvensbaserad infogning. Numrerade ACL:er kräver att hela listan raderas och skrivs om vid ändringar. Named ACL:er är flexiblare och lättare att underhålla."
+    },
+    {
+      "id": "sf-015",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Var placeras en Extended ACL enligt best practice och varför?",
+      "options": [
+        "Nära destinationen — för att undvika att blockera för mycket trafik",
+        "Nära källan — för att filtrera trafik så tidigt som möjligt och spara bandbredd",
+        "Mitt i nätverket på kärn-routern för centraliserad kontroll",
+        "Placering spelar ingen roll för extended ACL:er"
+      ],
+      "correct": 1,
+      "explanation": "Extended ACL matchar source OCH destination IP + protokoll/portar → vet exakt vad som ska blockeras. Placeras nära källan (inbound) för att stoppa trafik tidigt och inte belasta nätverket. Standard ACL (bara source IP) placeras nära destinationen för att inte blockera källans trafik till andra mål."
+    },
+    {
+      "id": "sf-016",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Varför ska Standard ACL:er placeras nära destinationen?",
+      "options": [
+        "För att minska bearbetningstid på käll-routern",
+        "Eftersom Standard ACL bara matchar source IP — nära källan riskerar man att blockera trafik till ALLA destinationer, inte bara den avsedda",
+        "Standard ACL:er fungerar tekniskt sett inte nära källan",
+        "Det finns ingen skillnad i placering för standard ACL:er"
+      ],
+      "correct": 1,
+      "explanation": "Standard ACL filtrerar bara på source IP. Nära källan: blockeras ALL trafik från källan, oavsett destination — inklusive legitim trafik till andra nät. Nära destinationen: källan kan nå alla andra mål, och blockeras bara mot det specifika skyddade nätverket."
+    },
+    {
+      "id": "sf-017",
+      "domain": "security-fundamentals",
+      "difficulty": "hard",
+      "question": "Vad är den viktigaste skillnaden mellan RADIUS och TACACS+ för nätverksenhets-hantering?",
+      "options": [
+        "RADIUS är Cisco-proprietärt; TACACS+ är öppen RFC-standard",
+        "TACACS+ separerar AAA i tre oberoende transaktioner och krypterar hela paketet (TCP 49); RADIUS kombinerar Authentication+Authorization och krypterar bara lösenordet (UDP 1812/1813)",
+        "RADIUS ger mer detaljerad kommando-auktorisering; TACACS+ är enklare",
+        "De är identiska protokoll med olika portval"
+      ],
+      "correct": 1,
+      "explanation": "TACACS+ (Cisco-proprietärt, TCP 49): separerar AAA, krypterar hela paketet, detaljerad per-kommando auktorisering — föredras för nätverksenhets-hantering (CLI-åtkomst). RADIUS (öppen standard RFC 2865, UDP 1812/1813): kombinerar Auth+Authz, krypterar bara lösenordet — standard för nätverksåtkomst (VPN, 802.1X, WiFi)."
+    },
+    {
+      "id": "sf-018",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är skillnaden mellan IPS och IDS?",
+      "options": [
+        "IDS blockerar aktivt skadlig trafik inline; IPS analyserar kopior av trafiken",
+        "IPS är placerat inline och kan blockera trafik aktivt; IDS analyserar speglad trafik (out-of-band) och larmar men blockerar inte",
+        "IPS och IDS är synonymer för samma teknologi",
+        "IDS är nyare teknologi och har ersatt IPS i moderna nätverk"
+      ],
+      "correct": 1,
+      "explanation": "IPS (Intrusion Prevention System): sitter inline, kan aktivt droppa skadliga paket i realtid — skyddar men tillför latens. IDS (Intrusion Detection System): analyserar kopior via SPAN/tap, skickar larm men blockerar inte. Nackdel med IDS: hinner inte stoppa attacker, bara detektera."
+    },
+    {
+      "id": "sf-019",
+      "domain": "security-fundamentals",
+      "difficulty": "easy",
+      "question": "Vad är ett DDoS-angrepp (Distributed Denial of Service)?",
+      "options": [
+        "En angripare stjäl inloggningsuppgifter via falska hemsidor",
+        "En samordnad attack från tusentals komprometterade enheter (botnet) som överbelastar en tjänst med trafik tills den blir otillgänglig",
+        "En angripare avlyssnar krypterad nätverkskommunikation",
+        "En angripare injicerar skadlig kod i en webbapplikationsdatabas"
+      ],
+      "correct": 1,
+      "explanation": "DDoS: angriparen kontrollerar ett botnet (infekterade enheter) som skickar extrema trafikvolymer mot målet. Distribuerad = trafik från tusentals källor → svårt att filtrera. Motåtgärder: rate limiting, BGP blackholing, upstream scrubbing centers. Skillnad mot DoS: DoS = en angriparkälla."
+    },
+    {
+      "id": "sf-020",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vad är spear phishing och hur skiljer det sig från vanlig phishing?",
+      "options": [
+        "Spear phishing är en mass-e-postkampanj till miljontals slumpmässiga mottagare",
+        "Spear phishing är en riktad attack mot en specifik person eller organisation med skräddarsytt innehåll baserat på research om målet",
+        "Spear phishing utnyttjar tekniska svagheter i nätverksprotokoll",
+        "Spear phishing är en typ av SQL injection riktad mot databaser"
+      ],
+      "correct": 1,
+      "explanation": "Spear phishing: angriparen forskar om målet (LinkedIn, företagswebbplats) och skapar personanpassade meddelanden. Mycket effektivare än bred phishing. Riktad mot högsta ledningen kallas whaling. Skyddsåtgärder: MFA, utbildning, e-postsäkerhetsfilter, DMARC/SPF/DKIM."
+    },
+    {
+      "id": "sf-021",
+      "domain": "security-fundamentals",
+      "difficulty": "normal",
+      "question": "Vilket wildcard-mask matchar exakt alla adresser i subnätet 192.168.1.0/24?",
+      "options": [
+        "255.255.255.0",
+        "0.0.0.255",
+        "0.255.255.255",
+        "255.0.0.255"
+      ],
+      "correct": 1,
+      "explanation": "Wildcard mask = inverterad subnätmask. /24 = 255.255.255.0 → wildcard = 0.0.0.255. ACL: 'access-list 10 permit 192.168.1.0 0.0.0.255' matchar 192.168.1.0–192.168.1.255. I wildcard: 0-bitar = måste matcha exakt, 1-bitar = kan vara vad som helst (host: 0.0.0.0, any: 255.255.255.255)."
+    },
+
+    {
+      "id": "ap-013",
+      "domain": "automation-programmability",
+      "difficulty": "hard",
+      "question": "Vad är NETCONF och vilket transport-protokoll och port använder det?",
+      "options": [
+        "Network Configuration Protocol — kör över UDP port 830",
+        "Network Configuration Protocol — kör över SSH (TCP port 830) och använder XML med RPC-operationer",
+        "Network Control Framework — kör över HTTPS port 443",
+        "Network Entity Configuration — kör över Telnet port 23"
+      ],
+      "correct": 1,
+      "explanation": "NETCONF (RFC 6241): nätverkskonfigurationsprotokoll över SSH port 830, XML-formaterade meddelanden, RPC-operationer (get-config, edit-config, delete-config, lock, commit). Stödjer transaktioner och rollback. Kräver YANG-datamodell. Används i moderna Cisco IOS-XE/NX-OS."
+    },
+    {
+      "id": "ap-014",
+      "domain": "automation-programmability",
+      "difficulty": "hard",
+      "question": "Vad är skillnaden mellan RESTCONF och NETCONF?",
+      "options": [
+        "RESTCONF är äldre och saknar stöd för JSON-format",
+        "RESTCONF använder HTTP/HTTPS med REST-semantik och stöder JSON/XML; NETCONF använder SSH med XML och RPC — NETCONF är kraftfullare men mer komplex",
+        "De är identiska protokoll med olika namngivning",
+        "NETCONF är nyare och ersätter RESTCONF i alla use cases"
+      ],
+      "correct": 1,
+      "explanation": "RESTCONF (RFC 8040): REST-baserat API över HTTPS, HTTP-metoder (GET/POST/PUT/PATCH/DELETE), JSON och XML, enklare integration med moderna verktyg och skript. NETCONF: SSH, XML, transaktionshantering, kandidatkonfiguration och rollback — kraftfullare men mer komplex. Bägge använder YANG-datamodeller."
+    },
+    {
+      "id": "ap-015",
+      "domain": "automation-programmability",
+      "difficulty": "hard",
+      "question": "Vad är YANG och varför används det med NETCONF och RESTCONF?",
+      "options": [
+        "Yet Another Network Gateway — ett routingprotokoll för SDN-controllers",
+        "Yet Another Next Generation — ett datamodelleringsspråk som definierar strukturen och datatyperna för nätverkskonfiguration, validerar data i NETCONF/RESTCONF",
+        "En nätverkstopologi-databas för centraliserad konfiguration",
+        "En krypteringsstandard för API-kommunikation i nätverksautomation"
+      ],
+      "correct": 1,
+      "explanation": "YANG (RFC 6020): maskinläsbart datamodelleringsspråk som definierar vilka konfigurationsparametrar som finns, deras datatyper och begränsningar. NETCONF/RESTCONF använder YANG-modellen för att validera och strukturera operationer. Cisco, IETF och OpenConfig levererar standardiserade YANG-modeller."
+    },
+    {
+      "id": "ap-016",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad används Python-biblioteket Netmiko till i nätverksautomation?",
+      "options": [
+        "Att generera nätverksdiagram från OSPF-topologin",
+        "Att förenkla SSH-anslutningar och CLI-interaktion med nätverksenheter från Cisco, Juniper, Arista m.fl. via en enhetlig API",
+        "Att bygga SDN-controllers med northbound API",
+        "Att parsa och analysera OSPF-routing-tabeller"
+      ],
+      "correct": 1,
+      "explanation": "Netmiko (Kirk Byers): bygger på Paramiko (SSH-bibliotek) och hanterar enhetspecifika SSH-quirks automatiskt. Stöder 60+ plattformar. Typiskt flöde: ConnectHandler() → send_command('show ip route') → disconnect(). Kombineras med TextFSM/ntc-templates för att parsa CLI-output till strukturerad data."
+    },
+    {
+      "id": "ap-017",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad innebär Infrastructure as Code (IaC) i nätverkssammanhang?",
+      "options": [
+        "Att dokumentera Cisco IOS-kommandon i ett textdokument för arkivering",
+        "Att definiera och hantera nätverksinfrastruktur via kod/konfigurationsfiler (YAML, HCL) som lagras i versionskontroll och automatiseras vid utrullning",
+        "En standard för att koda nätverkstopologier i XML-format",
+        "Att använda Python för att konfigurera enskilda nätverksenheter manuellt"
+      ],
+      "correct": 1,
+      "explanation": "IaC: infrastruktur definieras i deklarativa filer (Terraform HCL, Ansible YAML, CloudFormation). Filerna lagras i Git → spårbarhet, reproducerbarhet, rollback. Möjliggör CI/CD för nätverk: 'treat your network like code'. Cisco NSO, Ansible och Terraform används för nätverks-IaC."
+    },
+    {
+      "id": "ap-018",
+      "domain": "automation-programmability",
+      "difficulty": "normal",
+      "question": "Vad är den primära fördelen med controller-baserade nätverk (SDN) jämfört med traditionella distribuerade nätverk?",
+      "options": [
+        "Controller-baserade nätverk är alltid billigare i hårdvarukostnader",
+        "Centraliserad synlighet och kontroll — administratören konfigurerar policies på ett ställe, controllern distribuerar dem automatiskt till alla enheter",
+        "SDN-controllers eliminerar behovet av brandväggar i nätverket",
+        "Controller-baserade nätverk kräver inte internet för att fungera"
+      ],
+      "correct": 1,
+      "explanation": "SDN/controller-baserade nätverk: alla enheter styrs via northbound/southbound API. Fördelar: snabb skalbar konfiguration, konsekvent policyapplicering, automation, komplett nätverksöversikt för felsökning. Nackdel: controllern är single point of failure om ej HA-konfigurerad (aktiv/standby)."
     }
   ]
 }

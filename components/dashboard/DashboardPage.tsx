@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getProgress, addStudyTime } from "@/lib/progress";
-import { DOMAINS } from "@/lib/types";
-import type { AppProgress } from "@/lib/types";
+import { DOMAINS, DOMAIN_WEIGHTS } from "@/lib/types";
+import type { AppProgress, Domain } from "@/lib/types";
 import { xpProgress } from "@/lib/xp";
 import ScoreRing from "./ScoreRing";
 import DomainProgress from "./DomainProgress";
@@ -24,11 +24,18 @@ function formatTime(secs: number): string {
 }
 
 function calcOverall(progress: AppProgress): number {
-  const entries = Object.values(progress.domains);
+  const entries = Object.entries(progress.domains) as [Domain, { answered: number; correct: number }][];
   if (!entries.length) return 0;
-  const total = entries.reduce((s, d) => s + d.answered, 0);
-  const correct = entries.reduce((s, d) => s + d.correct, 0);
-  return total ? Math.round((correct / total) * 100) : 0;
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (const [domainId, stats] of entries) {
+    if (!stats || stats.answered === 0) continue;
+    const weight = DOMAIN_WEIGHTS[domainId] ?? 1 / 6;
+    const pct = stats.correct / stats.answered;
+    weightedSum += pct * weight;
+    totalWeight += weight;
+  }
+  return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) : 0;
 }
 
 export default function DashboardPage() {
@@ -124,6 +131,7 @@ export default function DashboardPage() {
               }}>
                 Nivå {xpData.level}
               </span>
+              <span style={{ fontSize: 10, color: "var(--text-dim)" }}>{xpData.title}</span>
             </div>
             <span style={{ fontSize: 10, color: "var(--text-dim)" }}>
               {xpData.intoLevel} / {xpData.needed} XP till nästa nivå

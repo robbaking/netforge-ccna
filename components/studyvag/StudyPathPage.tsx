@@ -6,7 +6,7 @@ import { DOMAINS } from "@/lib/types";
 import type { AppProgress } from "@/lib/types";
 import { STUDY_PHASES, phaseProgress, recommendedPhase, isPhaseUnlocked } from "@/lib/studypath";
 import { PHASE_CHECKLISTS } from "@/data/phasechecklist";
-import { getChecked, toggleChecked } from "@/lib/checklistprogress";
+import { getChecked, toggleChecked, canUnlockItem } from "@/lib/checklistprogress";
 
 const EMPTY: AppProgress = { domains: {}, activities: [], streak: 0, lastActiveDate: "", studyTimeSeconds: 0, xp: 0 };
 
@@ -198,32 +198,54 @@ export default function StudyPathPage() {
                       </span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                      {phaseChecklist.map((item) => {
+                      {phaseChecklist.map((item, itemIndex) => {
                         const isDone = checked.includes(item.id);
+                        const itemUnlocked = unlocked && canUnlockItem(phase.num, itemIndex, checked);
+                        const isLocked = !itemUnlocked;
+
                         return (
-                          <label
+                          <div
                             key={item.id}
                             style={{
-                              display: "flex", alignItems: "flex-start", gap: 8, cursor: unlocked ? "pointer" : "default",
+                              display: "flex", alignItems: "flex-start", gap: 8,
                               padding: "6px 8px", borderRadius: 5,
-                              background: isDone ? "#00e67608" : "var(--bg-elevated)",
-                              border: `1px solid ${isDone ? "#00e67620" : "var(--border)"}`,
+                              background: isDone ? "#00e67608" : isLocked ? "var(--bg-base)" : "var(--bg-elevated)",
+                              border: `1px solid ${isDone ? "#00e67620" : isLocked ? "var(--border)" : "var(--border)"}`,
+                              opacity: isLocked ? 0.45 : 1,
                             }}
                           >
                             <input
                               type="checkbox"
                               checked={isDone}
-                              disabled={!unlocked}
-                              onChange={() => unlocked && handleToggle(item.id)}
-                              style={{ marginTop: 1, accentColor: "var(--green)", cursor: unlocked ? "pointer" : "default" }}
+                              disabled={isLocked || Boolean(item.labId)}
+                              onChange={() => !isLocked && !item.labId && handleToggle(item.id)}
+                              style={{ marginTop: 1, accentColor: "var(--green)", cursor: isLocked || item.labId ? "default" : "pointer", flexShrink: 0 }}
                             />
-                            <span style={{
-                              fontSize: 10.5, color: isDone ? "var(--text-dim)" : "var(--text)",
-                              textDecoration: isDone ? "line-through" : "none", lineHeight: 1.5,
-                            }}>
-                              {item.text}
-                            </span>
-                          </label>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <span style={{
+                                fontSize: 10.5, color: isDone ? "var(--text-dim)" : isLocked ? "var(--text-dim)" : "var(--text)",
+                                textDecoration: isDone ? "line-through" : "none", lineHeight: 1.5,
+                                display: "block",
+                              }}>
+                                {isLocked ? "🔒 " : ""}{item.text}
+                              </span>
+                              {item.labId && !isLocked && (
+                                <Link
+                                  href={`/topologier?lab=${item.labId}`}
+                                  style={{
+                                    display: "inline-block", marginTop: 4,
+                                    fontSize: 9.5, color: isDone ? "var(--green)" : "var(--cyan)",
+                                    textDecoration: "none",
+                                    padding: "2px 8px", borderRadius: 3,
+                                    border: `1px solid ${isDone ? "var(--green)" : "var(--cyan)"}30`,
+                                    background: isDone ? "#00e67608" : "#00e5ff08",
+                                  }}
+                                >
+                                  {isDone ? "✓ Klar" : "Öppna lab →"}
+                                </Link>
+                              )}
+                            </div>
+                          </div>
                         );
                       })}
                     </div>

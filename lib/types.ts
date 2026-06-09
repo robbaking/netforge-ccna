@@ -15,6 +15,15 @@ export const DOMAINS: { id: Domain; label: string; weight: string }[] = [
   { id: "automation-programmability", label: "Automation & Prog.", weight: "10%" },
 ];
 
+export const DOMAIN_WEIGHTS: Record<Domain, number> = {
+  "network-fundamentals":       0.20,
+  "network-access":             0.20,
+  "ip-connectivity":            0.25,
+  "ip-services":                0.10,
+  "security-fundamentals":      0.15,
+  "automation-programmability": 0.10,
+};
+
 export type Difficulty = "easy" | "normal" | "hard";
 
 export interface Question {

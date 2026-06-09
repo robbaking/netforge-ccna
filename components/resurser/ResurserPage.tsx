@@ -22,8 +22,15 @@ const DOMAIN_LABELS: Record<Domain, string> = {
   "automation-programmability":"Automation",
 };
 
-export default function ResurserPage() {
-  const [activeFilter, setActiveFilter] = useState<Domain | "all">("all");
+interface Props {
+  initialDomain?: string;
+}
+
+export default function ResurserPage({ initialDomain }: Props) {
+  const validDomain = initialDomain && ["network-fundamentals","network-access","ip-connectivity","ip-services","security-fundamentals","automation-programmability"].includes(initialDomain)
+    ? initialDomain as Domain
+    : "all";
+  const [activeFilter, setActiveFilter] = useState<Domain | "all">(validDomain);
 
   const filtered = activeFilter === "all"
     ? resources
